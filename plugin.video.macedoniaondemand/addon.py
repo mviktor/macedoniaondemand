@@ -54,8 +54,8 @@ def playZuluStream(url):
 	link = response.read()
 	response.close()
 
-	streammatch = re.compile('<a class="playButton" href="(.+?)">').findall(link)
-	#streammatch = re.compile('<video .+? src="(.+?)"').findall(link)
+	#streammatch = re.compile('<a class="playButton" href="(.+?)">').findall(link)
+	streammatch = re.compile('<video .+? src="(.+?)"').findall(link)
 	titlematch = re.compile('class="title">(.+?)</h1>').findall(link)
 	listitem = xbmcgui.ListItem(titlematch[0] + ' - ВО ЖИВО');
 
