@@ -260,6 +260,44 @@ def play24VestiVideo(url):
 	return True
 
 
+# RADIOMK methods
+
+def createRadiomkListing():
+	url = 'http://www.radiomk.com/live/'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	match = re.compile('<li><a href="(.+?)" rel="dofollow" ><img src="(.+?)" alt=".+?">(.+?)</a></li>').findall(link)
+	return match
+
+def playRadiomkstream(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('Radiomk Stream', 'Initializing')
+
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(30, 'Fetching radio stream')
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	titlematch = re.compile('<title>(.+?)</title>').findall(link)
+	streammatch = re.compile("var stream = '(.+?)'").findall(link)
+	if streammatch == []:
+		streammatch = re.compile('file=(.+?);').findall(link)
+		if streammatch == []:
+			streammatch = re.compile('<embed src="(.+?)"').findall(link)
+	listitem = xbmcgui.ListItem(titlematch[0]);
+	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+	play.clear()
+	play.add(streammatch[0], listitem)
+	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+	pDialog.update(60, 'Playing')
+	player.play(play)
+	pDialog.close()
+
+	return True
 def PROCESS_PAGE(page,url=''):
 
 	if page == None:
@@ -275,6 +313,7 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == "liveradio_front":
 		addDir('on.net.mk', 'liveradio_onnet', '', '')
+		addDir('radiomk.com (beta)', 'liveradio_radiomk', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -287,6 +326,16 @@ def PROCESS_PAGE(page,url=''):
 			counter=counter+1
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == "liveradio_radiomk":
+		listing = createRadiomkListing()
+		for link, thumb, title in listing:
+			addLink(title, link, 'radiomk_playstream', 'http://www.radiomk.com/live/'+thumb)
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == "radiomk_playstream":
+		playRadiomkstream(url)
 
 
 	elif page == "tv_front":
