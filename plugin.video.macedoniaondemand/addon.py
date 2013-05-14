@@ -90,7 +90,7 @@ def playTelekabelStream(url):
 	req = urllib2.Request('http://telekabel.com.mk'+url)
 	req.add_header('User-Agent', user_agent)
 	req.add_header('Accept', str_accept)
-	pDialog.update(30, 'Fetching video stream 1')
+	pDialog.update(30, 'Fetching video stream 30%')
 	response = urllib2.urlopen(req)
 	link = response.read()
 	response.close()
@@ -100,7 +100,7 @@ def playTelekabelStream(url):
 	req = urllib2.Request('http://telekabel.com.mk'+nextframematch[0])
 	req.add_header('User-Agent', user_agent)
 	req.add_header('Accept', str_accept)
-	pDialog.update(60, 'Fetching video stream 2')
+	pDialog.update(60, 'Fetching video stream 60%')
 	response = urllib2.urlopen(req)
 	link = response.read()
 	streammatch = re.compile("file:'(.+?)'").findall(link)
@@ -280,10 +280,11 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == "liveradio_onnet":
 		listing = createOnnetRadioListing()
+		counter=0
 		for radioid,rtmstream,descr,mp3stream in listing:
-			#print descr+' '+stream
-			addLink(descr+' (rtmp)', 'rtmp://217.16.82.2/radio app=radio pageUrl=http://on.net.mk swfUrl=http://on.net.mk/radio/player/player.swf live=true playpath='+rtmstream+' timeout=3 swfVfy=true', '', '')
-			addLink(descr+' (mp3)', mp3stream, '', '')
+			if counter > 14:
+				addLink(descr, 'rtmp://217.16.82.2/radio app=radio pageUrl=http://on.net.mk swfUrl=http://on.net.mk/radio/player/player.swf live=true playpath='+rtmstream+' timeout=3 swfVfy=true', '', '')
+			counter=counter+1
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
