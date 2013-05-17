@@ -185,6 +185,19 @@ def createOnnetRadioListing():
 	#	print descr+' '+stream
 	return match
 
+# OFF NET methods
+
+def createOffnetRadioListing():
+	url='http://off.net.mk/radio'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('<a id=".+?" data-stream="(.+?)" data-frequency="(.+?)">(.+?)</a>  </li>').findall(link)
+	#for stream,freq,name in match:
+	#	print freq+" "+name+" "+stream
+	return match
 
 # 24 Vesti methods
 
@@ -327,6 +340,7 @@ def PROCESS_PAGE(page,url=''):
 	elif page == "liveradio_front":
 		addDir('on.net.mk', 'liveradio_onnet', '', '')
 		addDir('radiomk.com (beta)', 'liveradio_radiomk', '', '')
+		addDir('off.net.mk (beta)', 'liveradio_offnet', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -349,6 +363,14 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == "radiomk_playstream":
 		playRadiomkstream(url)
+
+	elif page == "liveradio_offnet":
+		listing = createOffnetRadioListing()
+		for stream, freq, title in listing:
+			#print freq+" "+name+" "+stream
+			addLink(freq+" "+title, 'rtmp://off.net.mk/radio app=radio pageUrl=http://off.net.mk swfUrl=http://off.net.mk/sites/all/libraries/jwplayer/player.swf live=true playpath='+stream+' timeout=3 swfVfy=true', '', '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 
 	elif page == "tv_front":
