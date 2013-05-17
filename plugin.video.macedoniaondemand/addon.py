@@ -1,9 +1,21 @@
 # -*- coding: utf-8 -*- 
 
-import urllib,urllib2,re,xbmcplugin,xbmcgui,HTMLParser
+"""
+	Macedonia On Demand XBMC addon.
+	Watch videos and live streams from Macedonian TV stations, and listen to live radio streams.
+"""
+
+import urllib,urllib2,re,xbmcplugin,xbmcaddon,xbmcgui,HTMLParser
+import sys,os,os.path
 
 user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:11.0) Gecko/20100101 Firefox/11.0'
 str_accept = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+#DIR_USERDATA = xbmc.translatePath(xbmcaddon.Addon("plugin.video.macedoniaondemand").getAddonInfo('profile'))
+#VERSION_FILE = DIR_USERDATA+'version.txt'
+#__version__ = xbmcaddon.Addon("plugin.video.macedoniaondemand").getAddonInfo("version")
+
+#if not os.path.isdir(DIR_USERDATA):
+#	os.makedirs(DIR_USERDATA)
 
 def get_params():
         param=[]
@@ -298,6 +310,7 @@ def playRadiomkstream(url):
 	pDialog.close()
 
 	return True
+
 def PROCESS_PAGE(page,url=''):
 
 	if page == None:
@@ -429,6 +442,22 @@ def PROCESS_PAGE(page,url=''):
 		play24VestiVideo(url)
 
 
+def fread(filename):
+	ver = ''
+	h = open(filename, "r")
+	try:
+		data = h.read()
+	finally:
+		h.close()
+	return data
+
+def fwrite(filename, data):
+	h = open(filename, "wb")
+	try:
+		h.write(data)
+	finally:
+		h.close()
+
 def addLink(name,url,page,iconimage,fanart=''):
         ok=True
 	if page != '':
@@ -458,11 +487,28 @@ url=None
 name=None
 page=None
 
-for i in range(0,4):
-	try:
-		print "arg["+str(i)+"]"+str(sys.argv[i])
-	except:
-		pass
+#for i in range(0,4):
+#	try:
+#		print "arg["+str(i)+"]"+str(sys.argv[i])
+#	except:
+#		pass
+
+# Inspired by xbmc-iplayer2
+
+old_version = ''
+
+result = True
+
+#if os.path.isfile(VERSION_FILE):
+#	old_version = fread(VERSION_FILE)
+
+#if old_version != __version__:
+#	d = xbmcgui.Dialog()
+#	result = d.yesno('Welcome to Macedonia On Demand', 'TERMS OF USE', 'You may not use the addon for any illegal ', 'or unauthorized purpose.', 'Decline', 'Accept')
+#	if result:
+#		fwrite(VERSION_FILE, __version__)
+#else:
+#	result = True
 
 try:
         url=urllib.unquote_plus(params["url"])
@@ -479,5 +525,6 @@ try:
 except:
         pass
 
-PROCESS_PAGE(page, url)
+if result:
+	PROCESS_PAGE(page, url)
 
