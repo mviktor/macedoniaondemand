@@ -174,6 +174,92 @@ def createOnnetRadioListing():
 	return match
 
 
+# 24 Vesti methods
+
+def play24VestiVesti():
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('24 Vesti', 'Initializing')
+	url='http://24vesti.mk/video/vesti'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(50, 'Finding stream')
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('file: "(.+?)"').findall(link)
+
+	listitem = xbmcgui.ListItem('24vesti.com.mk - Вести')
+
+	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+	play.clear()
+	play.add('http://24vesti.com.mk'+match[0]+'|Cookie=macedoniaondemand', listitem)
+	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+	pDialog.update(80, 'Playing')
+	player.play(play)
+	pDialog.close()
+
+def create24VestiEmisiiListing():
+	url = 'http://24vesti.mk/video/emisii'
+
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('<div class="views-field views-field-field-teaser-image-fid">.+?<a href="(.+?)" .+?><img src="(.+?)" .+?  \n  .+?  \n  .+?<a href=".+?">(.+?)</a>.+?').findall(link)
+
+	#for u,thumb,title in match:
+	#	print title
+
+	return match
+
+def create24VestiVideoSodrzina():
+	url='http://24vesti.mk/'
+
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+
+	match=re.compile('<span class="field-content"><div class="text-wrap">\n   <div class="views-field-title"><a href="(.+?)" class="imagecache imagecache-teaser-medium-wide imagecache-linked imagecache-teaser-medium-wide_linked"><img src="(.+?)" .+?\n   <div class="video-flag">(.+?)</div>\n   <div class="views-field-title"><a href=".+?">(.+?)</a></div>\n</div></span>  </div></li>\n').findall(link)
+
+	#for u,thumb,title1,title2 in match:
+	#	print title2.strip()
+	return match
+
+
+def play24VestiVideo(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('24Vesti Video', 'Initializing')
+	req = urllib2.Request('http://24vesti.com.mk/'+str(url))
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(30, 'Fetching video stream')
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+
+	filematch = re.compile('<param name="movie" value="(.+?)"').findall(link)
+	titlematch = re.compile('<title>(.+?)</title>').findall(link)
+	listitem = xbmcgui.ListItem(titlematch[0]);
+
+	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+	play.clear()
+	if filematch[0].__contains__('dailymotion'):
+		play.add('plugin://plugin.video.dailymotion_com/?url='+filematch[0].split('/')[-1]+'&mode=playVideo', listitem)
+	elif filematch[0].__contains__('youtube'):
+		play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1], listitem)
+	else:
+		play.add(filematch[0], listitem)
+	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+
+	pDialog.update(60, 'Playing')
+	player.play(play)
+	pDialog.close()
+
+	return True
+
+
 def PROCESS_PAGE(page,url=''):
 
 	if page == None:
@@ -205,6 +291,8 @@ def PROCESS_PAGE(page,url=''):
 	elif page == "tv_front":
 		stations = []
 		stations.append(["Мактел", "maktel_front", ''])
+		stations.append(["24 Вести (beta)", "24vesti_front", ''])
+
 		stations.append(["", "break", ''])
 		stations.append(["Гледај во живо", "live_front", ''])
 
@@ -255,6 +343,40 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page=='playmaktelvideo':
 		playMaktelVideo(url)
+
+	elif page == '24vesti_front':
+		addDir('Вести', '24vesti_vesti', '', '')
+		addDir('Емисии', '24vesti_emisii', '', '')
+		addDir('Видео содржина', '24vesti_videosodrzina', '', '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == '24vesti_emisii':
+		listing = create24VestiEmisiiListing()
+		for u,thumb,title in listing:
+			if title.__contains__('WIN-WIN'):
+				addLink(title, u, '24vesti_playvideo', thumb,'http://a1on.mk/wordpress/wp-content/uploads/2013/01/olivera-trajkovska.jpg')
+			else:
+				addLink(title, u, '24vesti_playvideo', thumb)
+		setView('files', 500)
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == '24vesti_videosodrzina':
+		listing = create24VestiVideoSodrzina()
+		for u,thumb,title1,title2 in listing:
+			addLink(title2.strip(), u, '24vesti_playvideosodrzina', thumb)
+		setView('files', 500)
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+
+	elif page=='24vesti_vesti':
+		play24VestiVesti()
+
+	elif page=='24vesti_playvideo':
+		play24VestiVideo(url)
+
+	elif page=='24vesti_playvideosodrzina':
+		play24VestiVideo(url)
 
 
 def addLink(name,url,page,iconimage,fanart=''):
