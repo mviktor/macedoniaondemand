@@ -285,6 +285,70 @@ def play24VestiVideo(url):
 	return True
 
 
+# NOVATV methods
+
+def createNovatvListing(page):
+	url = 'http://novatv.mk/index.php?navig=8&cat='
+
+	if page == 'novatv_evrozum':
+		url += '9'
+	elif page == 'novatv_insajd':
+		url += '15'
+	elif page == 'novatv_sekulovska':
+		url += '8'
+	elif page == 'novatv_dokument':
+		url += '14'
+	elif page == 'novatv_studio':
+		url += '16'
+	elif page == 'novatv_aktuel':
+		url += '18'
+	elif page == 'novatv_globus':
+		url += '17'
+	elif page == 'novatv_kultura':
+		url += '4'
+	elif page == 'novatv_zanimlivosti':
+		url += '1'
+
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	match=re.compile('<a class="ostanati_wrap" href="(.+?)"> \t  \t\r\n \t  .+? \r\n \t  <img src="(.+?)"  .+?  />\r\n \t  <h2 style="color:black;">(.+?)</h2>\r\n \t  <p>(.+?)</p>\r\n \t.+?<div class="more" style=".+?">.+?</div> \r\n \t  <div class=".+?" style=".+?">(.+?)</div> </div>\r\n \t  </div>\r\n \t  </a>').findall(link)
+	return match
+
+
+def playNovatvVideo(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('Nova Tv Video', 'Initializing')
+	req = urllib2.Request('http://novatv.mk/'+str(url))
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(30, 'Fetching video stream')
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+
+	filematch = re.compile('<iframe style=".+?" title="YouTube video player" class="youtube-player" type="text/html" \r\n\r\nwidth="680" height="411" src="(.+?)" frameborder="0" allowfullscreen></iframe>').findall(link)
+	titlematch = re.compile('<h2 class="news_title" >(.+?)</h2>').findall(link)
+	listitem = xbmcgui.ListItem(titlematch[0]);
+
+	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+	play.clear()
+	if filematch[0].__contains__('dailymotion'):
+		play.add('plugin://plugin.video.dailymotion_com/?url='+filematch[0].split('/')[-1]+'&mode=playVideo', listitem)
+	elif filematch[0].__contains__('youtube'):
+		play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('?')[0].split('/')[-1], listitem)
+	else:
+		play.add(filematch[0], listitem)
+	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+
+	pDialog.update(60, 'Playing')
+	player.play(play)
+	pDialog.close()
+
+	return True
+
+
 # RADIOMK methods
 
 def createRadiomkListing():
@@ -328,7 +392,7 @@ def PROCESS_PAGE(page,url=''):
 
 	if page == None:
 		addDir('Телевизија', 'tv_front', '', '')
-		addDir('Радио', 'radio_front', '', '')
+		addDir('Радио', 'liveradio_front', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -377,6 +441,7 @@ def PROCESS_PAGE(page,url=''):
 		stations = []
 		stations.append(["Мактел", "maktel_front", ''])
 		stations.append(["24 Вести (beta)", "24vesti_front", ''])
+		stations.append(["НОВА ТВ (beta)", "novatv_front", ''])
 
 		stations.append(["", "break", ''])
 		stations.append(["Гледај во живо", "live_front", ''])
@@ -462,6 +527,40 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page=='24vesti_playvideosodrzina':
 		play24VestiVideo(url)
+
+	elif page == 'novatv_front':
+		addDir('Еврозум', 'novatv_evrozum', '', '')
+		addDir('Инсајд', 'novatv_insajd', '', '')
+		addDir('Секуловска', 'novatv_sekulovska', '', '')
+		addDir('Документ', 'novatv_dokument', '', '')
+		addDir('Студио', 'novatv_studio', '', '')
+		addDir('Актуел', 'novatv_aktuel', '', '')
+		addDir('Глобус', 'novatv_globus', '', '')
+		addDir('Култура', 'novatv_kultura', '', '')
+		addDir('Занимливости', 'novatv_zanimlivosti', '', '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page=='novatv_playvideo':
+		playNovatvVideo(url)
+
+	elif page.__contains__('novatv_'):
+		listing = createNovatvListing(page)
+
+		if page == 'novatv_evrozum':
+			fanart = 'http://it.com.mk/wp-content/themes/itcommkv3/js/timthumb.php?src=http://it.com.mk/wp-content/uploads/2013/01/178960_10150985004651873_892876810_n.jpg&w=640&h=250&zc=1&q=100'
+		elif page == 'novatv_insajd':
+			fanart = 'http://novatv.mk/photos/u3.jpg'
+		elif page == 'novatv_sekulovska':
+			fanart = 'http://novatv.mk/photos/u4.jpg'
+		elif page == 'novatv_dokument':
+			fanart = 'http://novatv.mk/photos/u2.jpg'
+		else:
+			fanart = ''
+		for u,thumb,title,description,date in listing:
+			addLink(title+' '+date, u, 'novatv_playvideo', 'http://novatv.mk/'+thumb, fanart)
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 
 def fread(filename):
