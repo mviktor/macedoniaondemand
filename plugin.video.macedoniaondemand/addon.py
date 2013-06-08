@@ -194,7 +194,7 @@ def createOffnetRadioListing():
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	match=re.compile('<a id=".+?" data-stream="(.+?)" data-frequency="(.+?)">(.+?)</a>  </li>').findall(link)
+	match=re.compile('<a id=".+?" data-stream="(.+?)" data-frequency="(.+?)">(.+?)</a>').findall(link)
 	#for stream,freq,name in match:
 	#	print freq+" "+name+" "+stream
 	return match
@@ -430,9 +430,16 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == "liveradio_offnet":
 		listing = createOffnetRadioListing()
+		total=0
+		count=0
+		for stream, freq, title in listing:
+			total=total+1
+
 		for stream, freq, title in listing:
 			#print freq+" "+name+" "+stream
-			addLink(freq+" "+title, 'rtmp://off.net.mk/radio app=radio pageUrl=http://off.net.mk swfUrl=http://off.net.mk/sites/all/libraries/jwplayer/player.swf live=true playpath='+stream+' timeout=3 swfVfy=true', '', '')
+			count=count+1
+			if count > total/2:
+				addLink(freq+" "+title, 'rtmp://off.net.mk/radio app=radio pageUrl=http://off.net.mk swfUrl=http://off.net.mk/sites/all/libraries/jwplayer/player.swf live=true playpath='+stream+' timeout=3 swfVfy=true', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
