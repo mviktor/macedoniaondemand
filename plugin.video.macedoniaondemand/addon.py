@@ -388,6 +388,62 @@ def playRadiomkstream(url):
 
 	return True
 
+# TV SITEL methods
+
+def createSitelVideoListing():
+	url='http://sitel.com.mk/video'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('href="(.+?)" class="video-priloog clearfix">\n<div class="teaser-image"><div class="icon"></div><img src="(.+?)" width=".+?" height=".+?" alt="" /></div>\n<div class="category">.+?</div>\n<h3 class="title">(.+?)</h3>').findall(link)
+	return match
+
+def playSitelVideo(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('Sitel Video', 'Initializing')
+	req = urllib2.Request("http://sitel.com.mk"+str(url))
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(50, 'Fetching video stream')
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+
+	filematch = re.compile('file: "(.+?)"').findall(link)
+	titlematch = re.compile('<title>(.+?)</title>').findall(link)
+	listitem = xbmcgui.ListItem(titlematch[0]);
+
+	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+	play.clear()
+	if filematch[0].__contains__('rtmp'):
+		rtmpurl = filematch[0]
+		app=rtmpurl.split('/')[3]+'/'
+		apos=rtmpurl.find(app)
+		y=rtmpurl[apos+len(app):]
+		play.add(rtmpurl[:apos+len(app)]+' app='+app+' pageUrl=http://sitel.com.mk swfUrl=http://sitel.com.mk/sites/all/libraries/jw.player/jwplayer.flash.swf playpath='+y+' swfVfy=true flashver="LNX 10,0,32,18"', listitem)
+	else:
+		play.add(filematch[0], listitem)
+	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+	pDialog.update(90, 'Playing')
+	player.play(play)
+	pDialog.close()
+
+	return True
+
+def playSitelDnevnik():
+	listitem = xbmcgui.ListItem('Сител Дневник')
+	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+	play.clear()
+	#play.add('http://sitel.com.mk/sites/default/files/dnevnik/dnevnik/dnevnik.mp4', listitem)
+	play.add('rtmp://video.sitel.com.mk/vod/ app=vod/ pageUrl=http://sitel.com.mk swfUrl=http://sitel.com.mk/sites/all/libraries/jw.player/jwplayer.flash.swf playpath=mp4:default/files/dnevnik/dnevnik/dnevnik.mp4 swfVfy=true flashver="LNX 10,0,32,18"', listitem)
+	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+	player.play(play)
+
+	return True
+
+
+
 def PROCESS_PAGE(page,url=''):
 
 	if page == None:
@@ -449,6 +505,8 @@ def PROCESS_PAGE(page,url=''):
 		stations.append(["Мактел", "maktel_front", ''])
 		stations.append(["24 Вести (beta)", "24vesti_front", ''])
 		stations.append(["НОВА ТВ (beta)", "novatv_front", ''])
+		stations.append(["Сител (beta)", "sitel_front", ''])
+
 
 		stations.append(["", "break", ''])
 		stations.append(["Гледај во живо", "live_front", ''])
@@ -568,6 +626,26 @@ def PROCESS_PAGE(page,url=''):
 			addLink(title+' '+date, u, 'novatv_playvideo', 'http://novatv.mk/'+thumb, fanart)
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == "sitel_front":
+		addDir('Видео', 'sitel_video', '', '')
+		addDir('Дневник', 'sitel_dnevnik', '', 'http://sitel.com.mk/sites/all/themes/siteltv/images/video-dnevnik.jpg')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == "sitel_video":
+		listing = createSitelVideoListing()
+		for u, thumb, title in listing:
+			addLink(title, u, 'playsitelvideo',thumb)
+		setView('files', 500)
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page=='playsitelvideo':
+		playSitelVideo(url)
+
+	elif page == 'sitel_dnevnik':
+		playSitelDnevnik()
+
 
 
 def fread(filename):
