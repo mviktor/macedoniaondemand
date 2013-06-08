@@ -7,6 +7,7 @@
 
 import urllib,urllib2,re,xbmcplugin,xbmcaddon,xbmcgui,HTMLParser
 import sys,os,os.path
+from BeautifulSoup import BeautifulSoup
 
 user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:11.0) Gecko/20100101 Firefox/11.0'
 str_accept = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
@@ -442,6 +443,16 @@ def playSitelDnevnik():
 
 	return True
 
+#  MTV methods
+
+def createMTVSeriesListing():
+	url='http://www.mtv.com.mk/liveVideos.aspx?aId=undefined'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req, timeout=30)
+	link=response.read()
+	response.close()
+	return link
 
 
 def PROCESS_PAGE(page,url=''):
@@ -506,6 +517,7 @@ def PROCESS_PAGE(page,url=''):
 		stations.append(["24 Вести (beta)", "24vesti_front", ''])
 		stations.append(["НОВА ТВ (beta)", "novatv_front", ''])
 		stations.append(["Сител (beta)", "sitel_front", ''])
+		stations.append(["МТВ (beta)", "mtv_front", ''])
 
 
 		stations.append(["", "break", ''])
@@ -645,6 +657,26 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == 'sitel_dnevnik':
 		playSitelDnevnik()
+
+	elif page == "mtv_front":
+		addDir('МТВ Емисии','mtv_emisii','','')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'mtv_emisii':
+		link = createMTVSeriesListing()
+		tree = BeautifulSoup(link)
+
+		for Series in tree.findAll('gallery'):
+			SeriesName = Series.get('name')
+			for Videos in Series.findAll('video'):
+				VideoTitle = Videos.get('title')
+				VideoThumb = Videos.get('thumb')
+				VideoLink = Videos.get('videoclip')
+				addLink(SeriesName+" - "+VideoTitle, 'http://www.mtv.com.mk/'+VideoLink, '', VideoThumb)
+
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 
 
