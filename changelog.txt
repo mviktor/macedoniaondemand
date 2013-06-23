@@ -1,0 +1,32 @@
+v1.0.7
+    - Maktel.mk temporarily disabled as the web site changed it's design
+    - Couple of stable videostreams added
+        HRT1
+        RTS SAT
+        RTRS
+        AlJazeera Balkans
+        Animal Planet (promo channel from futubox.com)
+        Russia Today HD
+        Russia Today America HD
+        Euro Sport
+        Euro Sport 2
+
+v1.0.6
+    - Support for MTV added
+
+
+v1.0.5
+    - Support for Sitel TV added
+
+v1.0.4
+    - Bugfix for offnet radio
+
+v1.0.3
+    - Support for Novatv added
+
+v1.0.2
+    - Radiomk & radio offnet supported
+
+v1.0.1
+    - Initial version
+ 

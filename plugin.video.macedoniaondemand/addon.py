@@ -3,6 +3,7 @@
 """
 	Macedonia On Demand XBMC addon.
 	Watch videos and live streams from Macedonian TV stations, and listen to live radio streams.
+	Author: Viktor Mladenovski
 """
 
 import urllib,urllib2,re,xbmcplugin,xbmcaddon,xbmcgui,HTMLParser
@@ -454,6 +455,20 @@ def createMTVSeriesListing():
 	response.close()
 	return link
 
+#  OTHER live streams methods
+
+def createOtherListing():
+	list=[]
+	list.append(['HRT1', 'http://5323.live.streamtheworld.com/HTV1?streamtheworld_user=1&nobuf=1361039552824', 'http://www.247webtv.com/wp-content/uploads/2012/05/hrt1.jpg'])
+	list.append(['RTS SAT', 'http://rts.videostreaming.rs/rts', 'http://www.rts.rs/upload/storyBoxImageData/2008/07/19/18865/rts%20logo.bmp'])
+	list.append(['Russia Today News HD', 'rtmp://rt.fms-04.visionip.tv/live app=live swfUrl=http://rt.com/s/swf/player5.4.viral.swf pageUrl=http://rt.com playpath=rt-global-live-HD live=1 swfVfy=true', 'http://rt.com/static/img/static/logo.jpg'])
+	list.append(['Russia Today America HD', 'rtmp://rt.fms-04.visionip.tv/live app=live swfUrl=http://rt.com/s/swf/player5.4.viral.swf pageUrl=http://rt.com playpath=rt-america-live-HD live=1 swfVfy=true', 'http://rt.com/static/img/static/logo.jpg'])
+	list.append(['Al Jazeera Balkans', 'rtmp://aljazeeraflashlivefs.fplive.net/aljazeeraflashlive-live app=aljazeeraflashlive-live swfUrl=http://www.nettelevizor.com/playeri/player.swf pageUrl=http://ex-yu-tv-streaming.blogspot.se playpath=aljazeera_balkans_high live=true swfVfy=true', 'http://balkans.aljazeera.net/profiles/custom/themes/aljazeera_balkans/images/banner.png'])
+	list.append(['Animal Planet HD (promo futubox.com)', 'rtmp://s01.webport.tv/promo/ swfUrl=http://futuboxhd.com/wp-content/uploads/jw-player-plugin-for-wordpress/player/player.swf pageUrl=http://futuboxhd.com playpath=mtv live=1 swfVfy=true', 'http://static.ddmcdn.com/en-us/apl//images/default-still.jpg'])
+	list.append(['Euro Sport', 'http://esioslive2-i.akamaihd.net/hls/live/201149/AL_ESP1_INT_ENG/playlist_1800.m3u8', 'http://i.eurosport.com/2012/04/11/829581-14185018-640-360.png'])
+	list.append(['Euro Sport 2', 'http://esioslive2-i.akamaihd.net/hls/live/201150/AL_ESP2_INT_ENG/playlist_1800.m3u8', 'http://i.tv.sb.eurosport.com/2007/05/16/357195-2009106-317-238.jpg'])
+	return list
+
 
 def PROCESS_PAGE(page,url=''):
 
@@ -470,8 +485,8 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == "liveradio_front":
 		addDir('on.net.mk', 'liveradio_onnet', '', '')
-		addDir('radiomk.com (beta)', 'liveradio_radiomk', '', '')
-		addDir('off.net.mk (beta)', 'liveradio_offnet', '', '')
+		addDir('radiomk.com', 'liveradio_radiomk', '', '')
+		addDir('off.net.mk', 'liveradio_offnet', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -513,11 +528,11 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == "tv_front":
 		stations = []
-		stations.append(["Мактел", "maktel_front", ''])
-		stations.append(["24 Вести (beta)", "24vesti_front", ''])
-		stations.append(["НОВА ТВ (beta)", "novatv_front", ''])
-		stations.append(["Сител (beta)", "sitel_front", ''])
-		stations.append(["МТВ (beta)", "mtv_front", ''])
+		#stations.append(["Мактел", "maktel_front", ''])
+		stations.append(["24 Вести", "24vesti_front", ''])
+		stations.append(["НОВА ТВ", "novatv_front", ''])
+		stations.append(["Сител", "sitel_front", ''])
+		stations.append(["МТВ", "mtv_front", ''])
 
 
 		stations.append(["", "break", ''])
@@ -542,6 +557,7 @@ def PROCESS_PAGE(page,url=''):
 	elif page == 'live_front':
 		addDir('zulu.mk', 'live_zulumk', '', '')
 		addDir('telekabel.com.mk', 'live_telekabelmk', '', '')
+		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -567,6 +583,24 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page=='playtelekabelstream':
 		playTelekabelStream(url)
+
+	elif page == 'live_other':
+		listing = createOtherListing()
+		for i in range(len(listing)):
+			addLink(listing[i][0], 'u'+str(i), 'play_live_other', listing[i][2])
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'play_live_other':
+		nr = int(url[1:])
+		listing = createOtherListing()
+		item=listing[nr]
+		listitem = xbmcgui.ListItem(item[0])
+		play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+		play.clear()
+		play.add(item[1], listitem)
+		player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+		player.play(play)
 
 	elif page=='playmaktelvideo':
 		playMaktelVideo(url)
@@ -594,7 +628,6 @@ def PROCESS_PAGE(page,url=''):
 			addLink(title2.strip(), u, '24vesti_playvideosodrzina', thumb)
 		setView('files', 500)
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
 
 	elif page=='24vesti_vesti':
 		play24VestiVesti()
