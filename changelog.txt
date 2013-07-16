@@ -1,3 +1,6 @@
+v1.0.8
+    - Alsat-M initial support added
+
 v1.0.7
     - Maktel.mk temporarily disabled as the web site changed it's design
     - Couple of stable videostreams added

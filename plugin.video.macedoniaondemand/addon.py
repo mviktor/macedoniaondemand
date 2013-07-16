@@ -12,12 +12,12 @@ from BeautifulSoup import BeautifulSoup
 
 user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:11.0) Gecko/20100101 Firefox/11.0'
 str_accept = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-#DIR_USERDATA = xbmc.translatePath(xbmcaddon.Addon("plugin.video.macedoniaondemand").getAddonInfo('profile'))
-#VERSION_FILE = DIR_USERDATA+'version.txt'
-#__version__ = xbmcaddon.Addon("plugin.video.macedoniaondemand").getAddonInfo("version")
+DIR_USERDATA = xbmc.translatePath(xbmcaddon.Addon("plugin.video.macedoniaondemand").getAddonInfo('profile'))
+VERSION_FILE = DIR_USERDATA+'version.txt'
+__version__ = xbmcaddon.Addon("plugin.video.macedoniaondemand").getAddonInfo("version")
 
-#if not os.path.isdir(DIR_USERDATA):
-#	os.makedirs(DIR_USERDATA)
+if not os.path.isdir(DIR_USERDATA):
+	os.makedirs(DIR_USERDATA)
 
 def get_params():
         param=[]
@@ -469,6 +469,59 @@ def createOtherListing():
 	list.append(['Euro Sport 2', 'http://esioslive2-i.akamaihd.net/hls/live/201150/AL_ESP2_INT_ENG/playlist_1800.m3u8', 'http://i.tv.sb.eurosport.com/2007/05/16/357195-2009106-317-238.jpg'])
 	return list
 
+# ALSAT-M methods
+
+def createAlsatRrugaListing():
+	url='http://alsat-m.tv/feed/emisione/rruga-drejt/index.1.rss'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('<item>\n.+?<title>(.+?)</title>\n.+?<link>(.+?)</link>\n.+?\n.+?\n.+?<enclosure type="image/jpeg" url="(.+?)"').findall(link)
+	return match
+
+def playAlsatVideo(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('Alsat Video', 'Initializing')
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(50, 'Fetching video stream')
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+
+	filematch = re.compile('file:"(.+?)"').findall(link)
+	titlematch = re.compile('<title>(.+?)</title>').findall(link)
+	listitem = xbmcgui.ListItem(titlematch[0]);
+
+	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+	play.clear()
+	if filematch[0].__contains__('youtu.be'):
+		play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1], listitem)
+	else:
+		play.add(filematch[0], listitem)
+	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+	pDialog.update(90, 'Playing')
+	player.play(play)
+	pDialog.close()
+
+	return True
+
+# general methods
+
+def registerVersion(ver):
+	result = True
+	url = 'http://macedoniaondemand.com/register_plugin.php?ver='+ver
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	try:
+		response = urllib2.urlopen(req)
+		link = response.read()
+		response.close()
+	except:
+		result = False
+	return result
 
 def PROCESS_PAGE(page,url=''):
 
@@ -533,6 +586,7 @@ def PROCESS_PAGE(page,url=''):
 		stations.append(["НОВА ТВ", "novatv_front", ''])
 		stations.append(["Сител", "sitel_front", ''])
 		stations.append(["МТВ", "mtv_front", ''])
+		stations.append(["AlsatM", "alsat_front", ''])
 
 
 		stations.append(["", "break", ''])
@@ -555,8 +609,8 @@ def PROCESS_PAGE(page,url=''):
 
 
 	elif page == 'live_front':
-		addDir('zulu.mk', 'live_zulumk', '', '')
 		addDir('telekabel.com.mk', 'live_telekabelmk', '', '')
+		addDir('zulu.mk (нестабилно)', 'live_zulumk', '', '')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
@@ -711,6 +765,25 @@ def PROCESS_PAGE(page,url=''):
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
+	elif page == 'alsat_front':
+		addDir('Emisione Rruga Drejt', 'alsat_rruga', '', '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'alsat_rruga':
+		listing = createAlsatRrugaListing()
+		for title, link, thumb in listing:
+			str = title.replace('&lt;', '<')
+			str = str.replace('&gt;', '>')
+			str = str.replace('&quot;', "'")
+			str = str.replace('&#039;', "'")
+			addLink(str, link, 'playalsatvideo', thumb)
+		setView('files', 500)
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'playalsatvideo':
+		playAlsatVideo(url)
+
 
 
 def fread(filename):
@@ -768,18 +841,14 @@ page=None
 
 old_version = ''
 
+if os.path.isfile(VERSION_FILE):
+	old_version = fread(VERSION_FILE)
+
+if old_version != __version__:
+	result = registerVersion(__version__)
+	if result:
+		fwrite(VERSION_FILE, __version__)
 result = True
-
-#if os.path.isfile(VERSION_FILE):
-#	old_version = fread(VERSION_FILE)
-
-#if old_version != __version__:
-#	d = xbmcgui.Dialog()
-#	result = d.yesno('Welcome to Macedonia On Demand', 'TERMS OF USE', 'You may not use the addon for any illegal ', 'or unauthorized purpose.', 'Decline', 'Accept')
-#	if result:
-#		fwrite(VERSION_FILE, __version__)
-#else:
-#	result = True
 
 try:
         url=urllib.unquote_plus(params["url"])
