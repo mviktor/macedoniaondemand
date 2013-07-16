@@ -773,11 +773,11 @@ def PROCESS_PAGE(page,url=''):
 	elif page == 'alsat_rruga':
 		listing = createAlsatRrugaListing()
 		for title, link, thumb in listing:
-			str = title.replace('&lt;', '<')
-			str = str.replace('&gt;', '>')
-			str = str.replace('&quot;', "'")
-			str = str.replace('&#039;', "'")
-			addLink(str, link, 'playalsatvideo', thumb)
+			title = title.replace('&lt;', '<')
+			title = title.replace('&gt;', '>')
+			title = title.replace('&quot;', "'")
+			title = title.replace('&#039;', "'")
+			addLink(title, link, 'playalsatvideo', thumb)
 		setView('files', 500)
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 

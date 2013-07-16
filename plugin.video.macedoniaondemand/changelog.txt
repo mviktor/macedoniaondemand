@@ -1,3 +1,6 @@
+v1.0.9
+    - small bugfix
+
 v1.0.8
     - Alsat-M initial support added
 
