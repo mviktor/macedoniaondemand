@@ -1,3 +1,6 @@
+v1.1.0
+    - novatv bugfix for pages with multiple videos
+
 v1.0.9
     - small bugfix
 

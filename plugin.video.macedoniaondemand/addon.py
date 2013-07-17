@@ -294,8 +294,6 @@ def createNovatvListing(page):
 
 	if page == 'novatv_evrozum':
 		url += '9'
-	elif page == 'novatv_insajd':
-		url += '15'
 	elif page == 'novatv_sekulovska':
 		url += '8'
 	elif page == 'novatv_dokument':
@@ -331,22 +329,46 @@ def playNovatvVideo(url):
 	response.close()
 
 	filematch = re.compile('<iframe style=".+?" title="YouTube video player" class="youtube-player" type="text/html" \r\n\r\nwidth="680" height="411" src="(.+?)" frameborder="0" allowfullscreen></iframe>').findall(link)
-	titlematch = re.compile('<h2 class="news_title" >(.+?)</h2>').findall(link)
-	listitem = xbmcgui.ListItem(titlematch[0]);
+	if filematch != []:
+		titlematch = re.compile('<h2 class="news_title" >(.+?)</h2>').findall(link)
+		listitem = xbmcgui.ListItem(titlematch[0]);
 
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
-	if filematch[0].__contains__('dailymotion'):
-		play.add('plugin://plugin.video.dailymotion_com/?url='+filematch[0].split('/')[-1]+'&mode=playVideo', listitem)
-	elif filematch[0].__contains__('youtube'):
-		play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('?')[0].split('/')[-1], listitem)
+		play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+		play.clear()
+		if filematch[0].__contains__('dailymotion'):
+			play.add('plugin://plugin.video.dailymotion_com/?url='+filematch[0].split('/')[-1]+'&mode=playVideo', listitem)
+		elif filematch[0].__contains__('youtube'):
+			play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('?')[0].split('/')[-1], listitem)
+		else:
+			play.add(filematch[0], listitem)
+
+		player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+
+		pDialog.update(60, 'Playing')
+		player.play(play)
+		pDialog.close()
+
 	else:
-		play.add(filematch[0], listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+		filematch = re.compile('<iframe width=".+?" height=".+?" src="(.+?)" frameborder=".+?" allowfullscreen></iframe>').findall(link)
+		if filematch != []:
+			player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+			titlematch = re.compile('<h2 class="news_title" >(.+?)</h2>').findall(link)
+			listitem = xbmcgui.ListItem(titlematch[0]);
 
-	pDialog.update(60, 'Playing')
-	player.play(play)
-	pDialog.close()
+			playlist=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+			playlist.clear()
+
+			oldurl=''
+			for u in filematch:
+				if u.__contains__('youtube') and u != oldurl:
+					listitem = xbmcgui.ListItem('video')
+					#listitem.setProperty("PlayPaty", u)
+					playlist.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+u.split('/')[-1], listitem)
+					oldurl=u
+
+			pDialog.update(60, 'Playing')
+			player.play(playlist)
+			pDialog.close()
 
 	return True
 
@@ -694,7 +716,6 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == 'novatv_front':
 		addDir('Еврозум', 'novatv_evrozum', '', '')
-		addDir('Инсајд', 'novatv_insajd', '', '')
 		addDir('Секуловска', 'novatv_sekulovska', '', '')
 		addDir('Документ', 'novatv_dokument', '', '')
 		addDir('Студио', 'novatv_studio', '', '')
@@ -713,8 +734,6 @@ def PROCESS_PAGE(page,url=''):
 
 		if page == 'novatv_evrozum':
 			fanart = 'http://it.com.mk/wp-content/themes/itcommkv3/js/timthumb.php?src=http://it.com.mk/wp-content/uploads/2013/01/178960_10150985004651873_892876810_n.jpg&w=640&h=250&zc=1&q=100'
-		elif page == 'novatv_insajd':
-			fanart = 'http://novatv.mk/photos/u3.jpg'
 		elif page == 'novatv_sekulovska':
 			fanart = 'http://novatv.mk/photos/u4.jpg'
 		elif page == 'novatv_dokument':
