@@ -512,7 +512,7 @@ def playAlsatVideo(url):
 	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
 	play.clear()
 	if filematch[0].__contains__('youtu.be'):
-		play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1], listitem)
+		play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1].strip(), listitem)
 	else:
 		play.add(filematch[0], listitem)
 	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
