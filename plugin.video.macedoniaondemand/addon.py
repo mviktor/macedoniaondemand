@@ -522,6 +522,48 @@ def playAlsatVideo(url):
 
 	return True
 
+# HRT Methods
+
+def createHRTSeriesListing():
+	url='http://www.hrt.hr/enz'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	episode_start=link.find('<div id="emisije_po_abecedi">')
+	episode_end=link[episode_start:].find('</div')
+	episodes=link[episode_start:episode_start+episode_end]
+	match=re.compile('<li><a href="(.+?)">(.+?)</a></li>').findall(episodes)
+	return match
+
+def listHRTEpisodes(url):
+	list=[]
+	url = url.replace('&amp;', '&')
+	req = urllib2.Request('http://www.hrt.hr/'+url)
+	req.add_header('User-Agent', user_agent)
+
+	try:
+		response = urllib2.urlopen(req)
+		link = response.read()
+		response.close()
+	except:
+		return list
+
+
+	match=re.compile('<option value="(.+?)">(.+?)</option>').findall(link)
+	current_search_pos=link.find('<div id="enz_odabir_video">')
+
+	for id,name in match:
+		current_search_pos = link.find(id, current_search_pos)
+		videourl_start = link.find('m4v: "', current_search_pos)
+		videourl_end = link.find('"', videourl_start+6)
+		videourl=link[videourl_start+6:videourl_end]
+		list.append([name, videourl[:7]+urllib.quote(videourl[7:])])
+
+	return list
+
+
 # general methods
 
 def registerVersion(ver):
@@ -601,6 +643,7 @@ def PROCESS_PAGE(page,url=''):
 		stations.append(["Сител", "sitel_front", ''])
 		stations.append(["МТВ", "mtv_front", ''])
 		stations.append(["AlsatM", "alsat_front", ''])
+		stations.append(["HRT", "hrt_front", ''])
 
 
 		stations.append(["", "break", ''])
@@ -795,6 +838,20 @@ def PROCESS_PAGE(page,url=''):
 	elif page == 'playalsatvideo':
 		playAlsatVideo(url)
 
+	elif page == 'hrt_front':
+		listing = createHRTSeriesListing()
+		for link, title in listing:
+			addDir(title, 'list_hrt_episodes', link, '')
+		setView('files', 500)
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'list_hrt_episodes':
+		listing = listHRTEpisodes(url)
+		for i in range(len(listing)):
+			addLink(listing[i][0], listing[i][1], '', '')
+		setView('files', 500)
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
 
 
 def fread(filename):
@@ -856,8 +913,8 @@ if os.path.isfile(VERSION_FILE):
 	old_version = fread(VERSION_FILE)
 
 if old_version != __version__:
-	#result = registerVersion(__version__)
-	result = True
+	result = registerVersion(__version__)
+	#result = True
 	if result:
 		fwrite(VERSION_FILE, __version__)
 result = True
