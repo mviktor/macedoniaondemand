@@ -475,12 +475,10 @@ def createOtherListing():
 	list=[]
 	list.append(['HRT1', 'http://5323.live.streamtheworld.com/HTV1?streamtheworld_user=1&nobuf=1361039552824', 'http://www.247webtv.com/wp-content/uploads/2012/05/hrt1.jpg'])
 	list.append(['RTS SAT', 'http://rts.videostreaming.rs/rts', 'http://www.rts.rs/upload/storyBoxImageData/2008/07/19/18865/rts%20logo.bmp'])
+	list.append(['HRT4', 'http://4623.live.streamtheworld.com/HRT4?streamtheworld_user=1&nobuf=1384296611008', 'http://images3.wikia.nocookie.net/__cb20121221162236/logopedia/images/d/dc/HRT4.png'])
 	list.append(['Russia Today News HD', 'rtmp://rt.fms-04.visionip.tv/live app=live swfUrl=http://rt.com/s/swf/player5.4.viral.swf pageUrl=http://rt.com playpath=rt-global-live-HD live=1 swfVfy=true', 'http://rt.com/static/img/static/logo.jpg'])
 	list.append(['Russia Today America HD', 'rtmp://rt.fms-04.visionip.tv/live app=live swfUrl=http://rt.com/s/swf/player5.4.viral.swf pageUrl=http://rt.com playpath=rt-america-live-HD live=1 swfVfy=true', 'http://rt.com/static/img/static/logo.jpg'])
 	list.append(['Al Jazeera Balkans', 'rtmp://aljazeeraflashlivefs.fplive.net/aljazeeraflashlive-live app=aljazeeraflashlive-live swfUrl=http://www.nettelevizor.com/playeri/player.swf pageUrl=http://ex-yu-tv-streaming.blogspot.se playpath=aljazeera_balkans_high live=true swfVfy=true', 'http://balkans.aljazeera.net/profiles/custom/themes/aljazeera_balkans/images/banner.png'])
-	list.append(['Animal Planet HD (promo futubox.com)', 'rtmp://s01.webport.tv/promo/ swfUrl=http://futuboxhd.com/wp-content/uploads/jw-player-plugin-for-wordpress/player/player.swf pageUrl=http://futuboxhd.com playpath=mtv live=1 swfVfy=true', 'http://static.ddmcdn.com/en-us/apl//images/default-still.jpg'])
-	list.append(['Euro Sport', 'http://esioslive2-i.akamaihd.net/hls/live/201149/AL_ESP1_INT_ENG/playlist_1800.m3u8', 'http://i.eurosport.com/2012/04/11/829581-14185018-640-360.png'])
-	list.append(['Euro Sport 2', 'http://esioslive2-i.akamaihd.net/hls/live/201150/AL_ESP2_INT_ENG/playlist_1800.m3u8', 'http://i.tv.sb.eurosport.com/2007/05/16/357195-2009106-317-238.jpg'])
 	return list
 
 # ALSAT-M methods
@@ -494,6 +492,19 @@ def createAlsatRrugaListing():
 	response.close()
 	match=re.compile('<item>\n.+?<title>(.+?)</title>\n.+?<link>(.+?)</link>\n.+?\n.+?\n.+?<enclosure type="image/jpeg" url="(.+?)"').findall(link)
 	return match
+
+def createAlsat15mindebatListing():
+	url = 'http://alsat-m.tv/emisione/15_min_debat/index.1.html'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	#match=re.compile('<div class="short">\n\t\t<div class="short_holder">\n\t\t\t\n\t\t\t\t<div class="image3">\n  \n\t\t\t\t\t<a href="(.+?)">  <div class="video_icon"> <img src=".+?" alt="Video" />\t</div><img src="(.+?)" alt="image" /><br /></a>\n\t\t\t\t</div>\n\n\t\t\t\n\t\t\t<h2> <a href="(.+?)">(.+?)</a></h2>\n\t\t\t<span class="summary">(.+?)</span>...\n\t\t\t<div class="article_link">\n\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t<a href="(.+?)">.+?</a>').findall(link)
+	match=re.compile('<div class="short">\n\t\t<div class="short_holder">\n\t\t\t\n\t\t\t\t<div class="image3">\n  \n\t\t\t\t\t<a href="(.+?)">  <div class="video_icon"> <img src=".+?" alt="Video" />\t</div><img src="(.+?)" alt="image" /><br /></a>\n\t\t\t\t</div>\n\n\t\t\t\n\t\t\t<h2> <a href=".+?">(.+?)</a></h2>\n\t\t\t<span class="summary">.+?</span>...\n\t\t\t<div class="article_link">\n\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t<a href=".+?">.+?</a>').findall(link)
+
+	return match
+
 
 def playAlsatVideo(url):
 	pDialog = xbmcgui.DialogProgress()
@@ -667,7 +678,7 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == 'live_front':
 		addDir('telekabel.com.mk', 'live_telekabelmk', '', '')
-		addDir('zulu.mk (нестабилно)', 'live_zulumk', '', '')
+		addDir('zulu.mk', 'live_zulumk', '', '')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
@@ -821,6 +832,7 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == 'alsat_front':
 		addDir('Emisione Rruga Drejt', 'alsat_rruga', '', '')
+		addDir('Emisione 15 min Debat', 'alsat_15mindebat', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -831,7 +843,34 @@ def PROCESS_PAGE(page,url=''):
 			title = title.replace('&gt;', '>')
 			title = title.replace('&quot;', "'")
 			title = title.replace('&#039;', "'")
+			title = title.replace('&amp;', "&")
+
+			thumb = thumb.replace('&lt;', '<')
+			thumb = thumb.replace('&gt;', '>')
+			thumb = thumb.replace('&quot;', "'")
+			thumb = thumb.replace('&#039;', "'")
+			thumb = thumb.replace('&amp;', "&")
+
 			addLink(title, link, 'playalsatvideo', thumb)
+		setView('files', 500)
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'alsat_15mindebat':
+		listing = createAlsat15mindebatListing()
+		for link, thumb, title in listing:
+			title = title.replace('&lt;', '<')
+			title = title.replace('&gt;', '>')
+			title = title.replace('&quot;', "'")
+			title = title.replace('&#039;', "'")
+			title = title.replace('&amp;', "&")
+
+			thumb = thumb.replace('&lt;', '<')
+			thumb = thumb.replace('&gt;', '>')
+			thumb = thumb.replace('&quot;', "'")
+			thumb = thumb.replace('&#039;', "'")
+			thumb = thumb.replace('&amp;', "&")
+
+			addLink(title, 'http://alsat-m.tv/'+link, 'playalsatvideo', thumb)
 		setView('files', 500)
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
