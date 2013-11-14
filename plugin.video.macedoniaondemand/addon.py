@@ -501,7 +501,8 @@ def createAlsat15mindebatListing():
 	link = response.read()
 	response.close()
 	#match=re.compile('<div class="short">\n\t\t<div class="short_holder">\n\t\t\t\n\t\t\t\t<div class="image3">\n  \n\t\t\t\t\t<a href="(.+?)">  <div class="video_icon"> <img src=".+?" alt="Video" />\t</div><img src="(.+?)" alt="image" /><br /></a>\n\t\t\t\t</div>\n\n\t\t\t\n\t\t\t<h2> <a href="(.+?)">(.+?)</a></h2>\n\t\t\t<span class="summary">(.+?)</span>...\n\t\t\t<div class="article_link">\n\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t<a href="(.+?)">.+?</a>').findall(link)
-	match=re.compile('<div class="short">\n\t\t<div class="short_holder">\n\t\t\t\n\t\t\t\t<div class="image3">\n  \n\t\t\t\t\t<a href="(.+?)">  <div class="video_icon"> <img src=".+?" alt="Video" />\t</div><img src="(.+?)" alt="image" /><br /></a>\n\t\t\t\t</div>\n\n\t\t\t\n\t\t\t<h2> <a href=".+?">(.+?)</a></h2>\n\t\t\t<span class="summary">.+?</span>...\n\t\t\t<div class="article_link">\n\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t<a href=".+?">.+?</a>').findall(link)
+	#match=re.compile('<div class="short">\n\t\t<div class="short_holder">\n\t\t\t\n\t\t\t\t<div class="image3">\n  \n\t\t\t\t\t<a href="(.+?)">  <div class="video_icon"> <img src=".+?" alt="Video" />\t</div><img src="(.+?)" alt="image" /><br /></a>\n\t\t\t\t</div>\n\n\t\t\t\n\t\t\t<h2> <a href=".+?">(.+?)</a></h2>\n\t\t\t<span class="summary">.+?</span>...\n\t\t\t<div class="article_link">\n\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t<a href=".+?">.+?</a>').findall(link)
+	match=re.compile('<div class="video_short">\n        \n                \n            \n        <div class="image_play">\n            <a id=".+?" href=".+?>\n                \n                    <img src="(.+?)" alt=".+?" />\n                    \n                \n            </a>\n        </div>\n        <h4><a href="(.+?)">(.+?)</a></h4>').findall(link[link.find('<div id="videos_latest">'):link.find('<div id="videos_most_popular">')])
 
 	return match
 
@@ -857,7 +858,7 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == 'alsat_15mindebat':
 		listing = createAlsat15mindebatListing()
-		for link, thumb, title in listing:
+		for thumb, link, title in listing:
 			title = title.replace('&lt;', '<')
 			title = title.replace('&gt;', '>')
 			title = title.replace('&quot;', "'")

@@ -1,3 +1,6 @@
+v1.1.4
+    - Alsat-M: '15 min debat' fixed due to page redesign
+
 v1.1.3
     - Alsat-M 15 min debat
     - HRT4 live
