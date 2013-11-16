@@ -576,6 +576,57 @@ def listHRTEpisodes(url):
 	return list
 
 
+# Kanal5 Methods
+
+def createKanal5Series():
+	url = 'http://www.kanal5.com.mk/vozivo.asp'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('<div style="width:150px; height:100px; background-image:url\((.+?)\); background-repeat:no-repeat; background-position: center center; background-size:cover; overflow:hidden;"></div>\r\n                    </a>\r\n                  </div>\r\n                  <h2 style="font-size:17px !important;"><a href="(.+?)" data-rel="prettyPhoto\[iframe\]">(.+?)</a></h2>').findall(link)
+
+	return match
+
+def listKanal5Episodes(url):
+	url = url.replace('&amp;', '&')
+	req = urllib2.Request('http://www.kanal5.com.mk/'+url)
+	req.add_header('User-Agent', user_agent)
+
+	try:
+		response = urllib2.urlopen(req)
+		link = response.read()
+		response.close()
+	except:
+		return
+
+	match = re.compile('<a href="(.+?)"><div id="video" .+? class="title_tx">(.+?)</div></a>').findall(link)
+	return match
+
+def playKanal5Video(url, name):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('Kanal5', 'Initializing')
+	url = url.replace('&amp;', '&')
+	req = urllib2.Request('http://www.kanal5.com.mk/'+url)
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(50, 'Finding stream')
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	match = re.compile('file: "(.+?)",').findall(link)
+
+	listitem = xbmcgui.ListItem(name+' ')
+
+	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+	play.clear()
+	play.add(match[1]+'|Cookie=macedoniaondemand', listitem)
+	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+	pDialog.update(80, 'Playing')
+	player.play(play)
+	pDialog.close()
+
+
 # general methods
 
 def registerVersion(ver):
@@ -591,7 +642,7 @@ def registerVersion(ver):
 		result = False
 	return result
 
-def PROCESS_PAGE(page,url=''):
+def PROCESS_PAGE(page,url='',name=''):
 
 	if page == None:
 		addDir('Телевизија', 'tv_front', '', '')
@@ -656,6 +707,7 @@ def PROCESS_PAGE(page,url=''):
 		stations.append(["МТВ", "mtv_front", ''])
 		stations.append(["AlsatM", "alsat_front", ''])
 		stations.append(["HRT", "hrt_front", ''])
+		stations.append(["Kanal5", "kanal5_front", ''])
 
 
 		stations.append(["", "break", ''])
@@ -698,9 +750,9 @@ def PROCESS_PAGE(page,url=''):
 
 	elif page == 'live_telekabelmk':
 		listing = createTelekabelListing()
-		for u, name in listing:
+		for u, streamname in listing:
 			if not u.startswith('mms'):
-				addLink(name, u, 'playtelekabelstream', '')
+				addLink(streamname, u, 'playtelekabelstream', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -892,6 +944,25 @@ def PROCESS_PAGE(page,url=''):
 		setView('files', 500)
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
+	elif page == 'kanal5_front':
+		listing = createKanal5Series()
+		for thumb,link,title in listing:
+			addDir(title, 'list_kanal5_episodes', link, 'http://www.kanal5.com.mk/'+thumb)
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'list_kanal5_episodes':
+		listing = listKanal5Episodes(url)
+		for link,title in listing:
+			title = title.replace('<span class="datum_tx"><strong>', '')
+			title = title.replace('</strong>', '')
+			title = title.replace('</span>', '')
+			addDir(title, 'playKanal5Video', link, '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'playKanal5Video':
+		playKanal5Video(url, name)
 
 
 def fread(filename):
@@ -975,5 +1046,5 @@ except:
         pass
 
 if result:
-	PROCESS_PAGE(page, url)
+	PROCESS_PAGE(page, url, name)
 
