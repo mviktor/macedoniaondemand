@@ -507,6 +507,18 @@ def createAlsat15mindebatListing():
 
 	return match
 
+def createAlsat15mindebatLatest():
+	url = 'http://alsat.mk/index.php/emisii/index.1.html'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	#match=re.compile('<div class="short">\n\t\t<div class="short_holder">\n\t\t\t\n\t\t\t\t<div class="image3">\n  \n\t\t\t\t\t<a href="(.+?)">  <div class="video_icon"> <img src=".+?" alt="Video" />\t</div><img src="(.+?)" alt="image" /><br /></a>\n\t\t\t\t</div>\n\n\t\t\t\n\t\t\t<h2> <a href="(.+?)">(.+?)</a></h2>\n\t\t\t<span class="summary">(.+?)</span>...\n\t\t\t<div class="article_link">\n\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t<a href="(.+?)">.+?</a>').findall(link)
+	#match=re.compile('<div class="short">\n\t\t<div class="short_holder">\n\t\t\t\n\t\t\t\t<div class="image3">\n  \n\t\t\t\t\t<a href="(.+?)">  <div class="video_icon"> <img src=".+?" alt="Video" />\t</div><img src="(.+?)" alt="image" /><br /></a>\n\t\t\t\t</div>\n\n\t\t\t\n\t\t\t<h2> <a href=".+?">(.+?)</a></h2>\n\t\t\t<span class="summary">.+?</span>...\n\t\t\t<div class="article_link">\n\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t<a href=".+?">.+?</a>').findall(link)
+	match=re.compile('<div class="video_short">\n        \n                \n            \n        <div class="image_play">\n            <a id=".+?" href=".+?>\n                \n                    <img src="(.+?)" alt=".+?" />\n                    \n                \n            </a>\n        </div>\n        <h4><a href="(.+?)">(.+?)</a></h4>').findall(link[link.find('<div id="videos_latest">'):link.find('<div id="videos_most_popular">')])
+
+	return match
 
 def playAlsatVideo(url):
 	pDialog = xbmcgui.DialogProgress()
@@ -886,6 +898,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'alsat_front':
+		addDir('Последни емисии', 'alsat_15latest', '', '')
 		addDir('Emisione Rruga Drejt', 'alsat_rruga', '', '')
 		addDir('Emisione 15 min Debat', 'alsat_15mindebat', '', '')
 		setView()
@@ -928,6 +941,27 @@ def PROCESS_PAGE(page,url='',name=''):
 			addLink(title, 'http://alsat-m.tv/'+link, 'playalsatvideo', thumb)
 		setView('files', 500)
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'alsat_15latest':
+		listing = createAlsat15mindebatLatest()
+		for thumb, link, title in listing:
+			title = title.replace('&lt;', '<')
+			title = title.replace('&gt;', '>')
+			title = title.replace('&quot;', "'")
+			title = title.replace('&#039;', "'")
+			title = title.replace('&amp;', "&")
+
+			thumb = thumb.replace('&lt;', '<')
+			thumb = thumb.replace('&gt;', '>')
+			thumb = thumb.replace('&quot;', "'")
+			thumb = thumb.replace('&#039;', "'")
+			thumb = thumb.replace('&amp;', "&")
+
+			addLink(title, link, 'playalsatvideo', thumb)
+		setView('files', 500)
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+
 
 	elif page == 'playalsatvideo':
 		playAlsatVideo(url)
