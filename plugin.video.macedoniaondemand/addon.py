@@ -224,6 +224,7 @@ def play24VestiVesti():
 	pDialog.update(80, 'Playing')
 	player.play(play)
 	pDialog.close()
+	return True
 
 def create24VestiEmisiiListing():
 	url = 'http://24vesti.mk/video/emisii'
@@ -625,6 +626,7 @@ def playKanal5Video(url, name):
 	pDialog.update(80, 'Playing')
 	player.play(play)
 	pDialog.close()
+	return True
 
 
 # general methods
@@ -781,7 +783,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		playMaktelVideo(url)
 
 	elif page == '24vesti_front':
-		addDir('Вести', '24vesti_vesti', '', '')
+		addLink('Вести', '', '24vesti_vesti', '')
 		addDir('Емисии', '24vesti_emisii', '', '')
 		addDir('Видео содржина', '24vesti_videosodrzina', '', '')
 		setView()
@@ -846,7 +848,7 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == "sitel_front":
 		addDir('Видео', 'sitel_video', '', '')
-		addDir('Дневник', 'sitel_dnevnik', '', 'http://sitel.com.mk/sites/all/themes/siteltv/images/video-dnevnik.jpg')
+		addLink('Дневник', '', 'sitel_dnevnik', 'http://sitel.com.mk/sites/all/themes/siteltv/images/video-dnevnik.jpg')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -957,12 +959,13 @@ def PROCESS_PAGE(page,url='',name=''):
 			title = title.replace('<span class="datum_tx"><strong>', '')
 			title = title.replace('</strong>', '')
 			title = title.replace('</span>', '')
-			addDir(title, 'playKanal5Video', link, '')
+			addLink(title, link, 'playKanal5Video', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'playKanal5Video':
 		playKanal5Video(url, name)
+
 
 
 def fread(filename):
@@ -984,7 +987,7 @@ def fwrite(filename, data):
 def addLink(name,url,page,iconimage,fanart=''):
         ok=True
 	if page != '':
-		u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&page="+str(page)
+		u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&page="+str(page)+"&name="+urllib.quote_plus(name)
 	else:
 		u=url
         liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
