@@ -981,6 +981,8 @@ def PROCESS_PAGE(page,url='',name=''):
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'kanal5_front':
+		addLink('Во живо', 'mms://live.kanal5.com.mk/kanal5', '', '')
+		addDir('', 'break', '', '')
 		listing = createKanal5Series()
 		for thumb,link,title in listing:
 			addDir(title, 'list_kanal5_episodes', link, 'http://www.kanal5.com.mk/'+thumb)
