@@ -480,6 +480,7 @@ def createOtherListing():
 	list.append(['Russia Today News HD', 'rtmp://rt.fms-04.visionip.tv/live app=live swfUrl=http://rt.com/s/swf/player5.4.viral.swf pageUrl=http://rt.com playpath=rt-global-live-HD live=1 swfVfy=true', 'http://rt.com/static/img/static/logo.jpg'])
 	list.append(['Russia Today America HD', 'rtmp://rt.fms-04.visionip.tv/live app=live swfUrl=http://rt.com/s/swf/player5.4.viral.swf pageUrl=http://rt.com playpath=rt-america-live-HD live=1 swfVfy=true', 'http://rt.com/static/img/static/logo.jpg'])
 	list.append(['Al Jazeera Balkans', 'rtmp://aljazeeraflashlivefs.fplive.net/aljazeeraflashlive-live app=aljazeeraflashlive-live swfUrl=http://www.nettelevizor.com/playeri/player.swf pageUrl=http://ex-yu-tv-streaming.blogspot.se playpath=aljazeera_balkans_high live=true swfVfy=true', 'http://balkans.aljazeera.net/profiles/custom/themes/aljazeera_balkans/images/banner.png'])
+	list.append(['Heart TV UK', 'rtmp://cdn-sov-2.musicradio.com:80/LiveVideo//Heart', 'http://www.jumpdesign.co.uk/assets/templates/jump/videos/placeholder/heart_2.jpg'])
 	return list
 
 # ALSAT-M methods
