@@ -1,3 +1,8 @@
+v1.1.7
+    - HRT: site got small update, hence update of the add-on.
+    - Add support for Heart TV UK.
+    - Kanal5: support for live tv
+
 v1.1.6
     - Alsat: Подршка за 'Последни Емисии'
 
