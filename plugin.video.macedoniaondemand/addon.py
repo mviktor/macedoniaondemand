@@ -557,16 +557,13 @@ def createHRTSeriesListing():
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	episode_start=link.find('<div id="emisije_po_abecedi">')
-	episode_end=link[episode_start:].find('</div')
-	episodes=link[episode_start:episode_start+episode_end]
-	match=re.compile('<li><a href="(.+?)">(.+?)</a></li>').findall(episodes)
+	match=re.compile('<li><a href="(.+?)">(.+?)</a></li>\n                                    \n                                        ').findall(link)
 	return match
 
 def listHRTEpisodes(url):
 	list=[]
 	url = url.replace('&amp;', '&')
-	req = urllib2.Request('http://www.hrt.hr/'+url)
+	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
 
 	try:
@@ -576,18 +573,43 @@ def listHRTEpisodes(url):
 	except:
 		return list
 
+	match=re.compile('<option selected="selected" value="(.+?)">(.+?)<').findall(link)
+	for value,title in match:
+		list.append([title.strip(), url+value])
 
-	match=re.compile('<option value="(.+?)">(.+?)</option>').findall(link)
-	current_search_pos=link.find('<div id="enz_odabir_video">')
-
-	for id,name in match:
-		current_search_pos = link.find(id, current_search_pos)
-		videourl_start = link.find('m4v: "', current_search_pos)
-		videourl_end = link.find('"', videourl_start+6)
-		videourl=link[videourl_start+6:videourl_end]
-		list.append([name, videourl[:7]+urllib.quote(videourl[7:])])
+	match=re.compile('option value="(.+?)">(.+?)<').findall(link)
+	for value,title in match:
+		list.append([title.strip(), url+value])
 
 	return list
+
+def playHRTVideo(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('HRT Video', 'Initializing')
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(50, 'Fetching video stream')
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+
+	filematch = re.compile('<video data-url="(.+?)"').findall(link)
+	titlematch = re.compile('<title>(.+?)</title>').findall(link)
+	listitem = xbmcgui.ListItem(titlematch[0]);
+
+	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+	play.clear()
+	if filematch[0].__contains__('youtu.be'):
+		play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1].strip(), listitem)
+	else:
+		play.add(filematch[0], listitem)
+	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+	pDialog.update(90, 'Playing')
+	player.play(play)
+	pDialog.close()
+
+	return True
+
 
 
 # Kanal5 Methods
@@ -976,10 +998,13 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'list_hrt_episodes':
 		listing = listHRTEpisodes(url)
-		for i in range(len(listing)):
-			addLink(listing[i][0], listing[i][1], '', '')
+		for title,link in listing:
+			addLink(title, link, 'play_hrt_video', '')
 		setView('files', 500)
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'play_hrt_video':
+		playHRTVideo(url)
 
 	elif page == 'kanal5_front':
 		addLink('Во живо', 'mms://live.kanal5.com.mk/kanal5', '', '')
