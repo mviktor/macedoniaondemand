@@ -38,10 +38,9 @@ def get_params():
 
         return param
 
-def setView(content='movies', mode=503):
-	return 0
-#	xbmcplugin.setContent(int(sys.argv[1]), content)
-#	xbmc.executebuiltin("Container.SetViewMode("+str(mode)+")")
+def setView(content='movies', mode=502):
+	xbmcplugin.setContent(int(sys.argv[1]), content)
+	xbmc.executebuiltin("Container.SetViewMode("+str(mode)+")")
 
 
 # ZULU live 
@@ -226,8 +225,11 @@ def play24VestiVesti():
 	pDialog.close()
 	return True
 
-def create24VestiEmisiiListing():
-	url = 'http://24vesti.mk/video/emisii'
+def create24VestiEmisiiListing(urlpagenr):
+	if urlpagenr == '':
+		url = 'http://24vesti.mk/video/emisii'
+	else:
+		url = 'http://24vesti.mk/video/emisii?page='+urlpagenr
 
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
@@ -825,13 +827,19 @@ def PROCESS_PAGE(page,url='',name=''):
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == '24vesti_emisii':
-		listing = create24VestiEmisiiListing()
+		listing = create24VestiEmisiiListing(url)
 		for u,thumb,title in listing:
 			if title.__contains__('WIN-WIN'):
 				addLink(title, u, '24vesti_playvideo', thumb,'http://a1on.mk/wordpress/wp-content/uploads/2013/01/olivera-trajkovska.jpg')
 			else:
 				addLink(title, u, '24vesti_playvideo', thumb)
-		setView('files', 500)
+		if url == '':
+			addDir('Претходно', '24vesti_emisii', '1', '')
+		else:
+			urlpage = int(url)+1
+			addDir('Претходно', '24vesti_emisii', str(urlpage), '')
+
+		setView('movies', 500)
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == '24vesti_videosodrzina':
@@ -993,14 +1001,14 @@ def PROCESS_PAGE(page,url='',name=''):
 		listing = createHRTSeriesListing()
 		for link, title in listing:
 			addDir(title, 'list_hrt_episodes', link, '')
-		setView('files', 500)
+		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'list_hrt_episodes':
 		listing = listHRTEpisodes(url)
 		for title,link in listing:
 			addLink(title, link, 'play_hrt_video', '')
-		setView('files', 500)
+		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'play_hrt_video':
