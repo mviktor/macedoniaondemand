@@ -463,14 +463,38 @@ def playSitelDnevnik():
 
 #  MTV methods
 
-def createMTVSeriesListing():
-	url='http://www.mtv.com.mk/liveVideos.aspx?aId=undefined'
+def createmrtplayLiveListing():
+	url = 'http://play.mrt.com.mk/epg/linear'
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req, timeout=30)
+	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	return link
+	match=re.compile('<a href="(.+?)" title="(.+?)">\n.+?<img src="(.+?)" alt="">').findall(link)
+	return match
+
+def playmrtlive(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('MRT Play live stream', 'Initializing')
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(50, 'Fetching video stream')
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+
+	streamlink = re.compile('"baseUrl":"(.+?)"').findall(link)
+	listitem = xbmcgui.ListItem('МРТ play');
+
+	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+	play.clear()
+	play.add(streamlink[0]+'/master.m3u8', listitem)
+	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+	pDialog.update(70, 'Playing')
+	player.play(play)
+	pDialog.close()
+
+	return True
 
 #  OTHER live streams methods
 
@@ -743,7 +767,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		stations.append(["24 Вести", "24vesti_front", ''])
 		stations.append(["НОВА ТВ", "novatv_front", ''])
 		stations.append(["Сител", "sitel_front", ''])
-		stations.append(["МТВ", "mtv_front", ''])
+		stations.append(["МРТ Play", "mrt_front", ''])
 		stations.append(["AlsatM", "alsat_front", ''])
 		stations.append(["HRT", "hrt_front", ''])
 		stations.append(["Kanal5", "kanal5_front", ''])
@@ -771,9 +795,20 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'live_front':
 		addDir('telekabel.com.mk', 'live_telekabelmk', '', '')
 		addDir('zulu.mk', 'live_zulumk', '', '')
+		addDir('мрт play', 'live_mrtplay', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'live_mrtplay':
+		listing = createmrtplayLiveListing()
+		for link, title, thumb in listing:
+			addLink(title, link.strip(), 'playmrtlive', thumb)
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'playmrtlive':
+		playmrtlive(url)
 
 	elif page == 'live_zulumk':
 		listing = createZuluListing()
@@ -908,23 +943,8 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'sitel_dnevnik':
 		playSitelDnevnik()
 
-	elif page == "mtv_front":
-		addDir('МТВ Емисии','mtv_emisii','','')
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'mtv_emisii':
-		link = createMTVSeriesListing()
-		tree = BeautifulSoup(link)
-
-		for Series in tree.findAll('gallery'):
-			SeriesName = Series.get('name')
-			for Videos in Series.findAll('video'):
-				VideoTitle = Videos.get('title')
-				VideoThumb = Videos.get('thumb')
-				VideoLink = Videos.get('videoclip')
-				addLink(SeriesName+" - "+VideoTitle, 'http://www.mtv.com.mk/'+VideoLink, '', VideoThumb)
-
+	elif page == "mrt_front":
+		addDir('Канали','live_mrtplay', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
