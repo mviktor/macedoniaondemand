@@ -494,6 +494,60 @@ def playmrtlive(url):
 
 	return True
 
+def createMRTPlaySeries():
+	url = 'http://play.mrt.com.mk/channel'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('<a class=".+?" href="(.+?)" data-category="(.+?)" data-category-name="(.+?)">').findall(link)
+	if match != []:
+		return match[1:]
+	else:
+		return []
+
+def listMRTEpisodes(url):
+	url = 'http://play.mrt.com.mk'+url
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('<article.+?\n.+?data-title="(.+?)"\n.+?data-description="(.+?)"\n.+?data-length="(.+?)"\n.+?data-published="(.+?)"\n.+?>\n.+?<div class="playDisplayTable">\n.+?<a href="(.+?)".+?\n.+?\n.+?\n.+?<img.+?src="(.+?)"').findall(link)
+	return match
+
+def playMRTVideo(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('MRT Video', 'Initializing')
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(50, 'Fetching video stream')
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+
+	match2=re.compile('"playlist":\[{"url":"(.+?)"').findall(link)
+	match1 = re.compile('"baseUrl":"(.+?)"').findall(link)
+	title = re.compile('<meta property="og:title" content="(.+?)"').findall(link)
+	if match2 != [] and match1 != []:
+		playurl=match1[0]+"/"+match2[0]
+		playurl=playurl[:playurl.rfind('/')]+'/master.m3u8'
+		if title != []:
+			videotitle = title[0]
+		else:
+			videtitle = 'MRT Video'
+		listitem = xbmcgui.ListItem(videotitle)
+		play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+		play.clear()
+		play.add(playurl, listitem)
+		player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+		pDialog.update(70, 'Playing')
+		player.play(play)
+		pDialog.close()
+
+	return True
+
 #  OTHER live streams methods
 
 def createOtherListing():
@@ -526,8 +580,6 @@ def createAlsat15mindebatListing():
 	response = urllib2.urlopen(req)
 	link = response.read()
 	response.close()
-	#match=re.compile('<div class="short">\n\t\t<div class="short_holder">\n\t\t\t\n\t\t\t\t<div class="image3">\n  \n\t\t\t\t\t<a href="(.+?)">  <div class="video_icon"> <img src=".+?" alt="Video" />\t</div><img src="(.+?)" alt="image" /><br /></a>\n\t\t\t\t</div>\n\n\t\t\t\n\t\t\t<h2> <a href="(.+?)">(.+?)</a></h2>\n\t\t\t<span class="summary">(.+?)</span>...\n\t\t\t<div class="article_link">\n\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t<a href="(.+?)">.+?</a>').findall(link)
-	#match=re.compile('<div class="short">\n\t\t<div class="short_holder">\n\t\t\t\n\t\t\t\t<div class="image3">\n  \n\t\t\t\t\t<a href="(.+?)">  <div class="video_icon"> <img src=".+?" alt="Video" />\t</div><img src="(.+?)" alt="image" /><br /></a>\n\t\t\t\t</div>\n\n\t\t\t\n\t\t\t<h2> <a href=".+?">(.+?)</a></h2>\n\t\t\t<span class="summary">.+?</span>...\n\t\t\t<div class="article_link">\n\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t<a href=".+?">.+?</a>').findall(link)
 	match=re.compile('<div class="video_short">\n        \n                \n            \n        <div class="image_play">\n            <a id=".+?" href=".+?>\n                \n                    <img src="(.+?)" alt=".+?" />\n                    \n                \n            </a>\n        </div>\n        <h4><a href="(.+?)">(.+?)</a></h4>').findall(link[link.find('<div id="videos_latest">'):link.find('<div id="videos_most_popular">')])
 
 	return match
@@ -539,8 +591,6 @@ def createAlsat15mindebatLatest():
 	response = urllib2.urlopen(req)
 	link = response.read()
 	response.close()
-	#match=re.compile('<div class="short">\n\t\t<div class="short_holder">\n\t\t\t\n\t\t\t\t<div class="image3">\n  \n\t\t\t\t\t<a href="(.+?)">  <div class="video_icon"> <img src=".+?" alt="Video" />\t</div><img src="(.+?)" alt="image" /><br /></a>\n\t\t\t\t</div>\n\n\t\t\t\n\t\t\t<h2> <a href="(.+?)">(.+?)</a></h2>\n\t\t\t<span class="summary">(.+?)</span>...\n\t\t\t<div class="article_link">\n\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t<a href="(.+?)">.+?</a>').findall(link)
-	#match=re.compile('<div class="short">\n\t\t<div class="short_holder">\n\t\t\t\n\t\t\t\t<div class="image3">\n  \n\t\t\t\t\t<a href="(.+?)">  <div class="video_icon"> <img src=".+?" alt="Video" />\t</div><img src="(.+?)" alt="image" /><br /></a>\n\t\t\t\t</div>\n\n\t\t\t\n\t\t\t<h2> <a href=".+?">(.+?)</a></h2>\n\t\t\t<span class="summary">.+?</span>...\n\t\t\t<div class="article_link">\n\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t<a href=".+?">.+?</a>').findall(link)
 	match=re.compile('<div class="video_short">\n        \n                \n            \n        <div class="image_play">\n            <a id=".+?" href=".+?>\n                \n                    <img src="(.+?)" alt=".+?" />\n                    \n                \n            </a>\n        </div>\n        <h4><a href="(.+?)">(.+?)</a></h4>').findall(link[link.find('<div id="videos_latest">'):link.find('<div id="videos_most_popular">')])
 
 	return match
@@ -904,7 +954,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		listing = createNovatvListing(page)
 
 		if page == 'novatv_evrozum':
-			fanart = 'http://it.com.mk/wp-content/themes/itcommkv3/js/timthumb.php?src=http://it.com.mk/wp-content/uploads/2013/01/178960_10150985004651873_892876810_n.jpg&w=640&h=250&zc=1&q=100'
+			fanart = 'http://novatv.mk/photos/u2.jpg'
 		elif page == 'novatv_sekulovska':
 			fanart = 'http://novatv.mk/photos/u4.jpg'
 		elif page == 'novatv_dokument':
@@ -936,9 +986,30 @@ def PROCESS_PAGE(page,url='',name=''):
 		playSitelDnevnik()
 
 	elif page == "mrt_front":
+		addDir('Програми', 'mrtplay_listseries', '', 'http://189a88d8-production-mrt.static.spectar.tv/uploads/84/images/a5fc505a068e25f14aee9fa5e2e84162c26bb3d7.png')
 		addDir('Канали','live_mrtplay', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'mrtplay_listseries':
+		listing = createMRTPlaySeries()
+
+		for url, category, title in listing:
+			addDir(title, 'list_mrt_episodes', url, '')
+
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'list_mrt_episodes':
+		listing = listMRTEpisodes(url)
+		if listing != []:
+			for title,descr,duration,publish,url,thumb in listing:
+				addLink(title, url, 'play_mrt_video', thumb, '', duration, publish, descr)
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'play_mrt_video':
+		playMRTVideo(url)
 
 	elif page == 'alsat_front':
 		addDir('Последни емисии', 'alsat_15latest', '', '')
@@ -1066,7 +1137,7 @@ def fwrite(filename, data):
 	finally:
 		h.close()
 
-def addLink(name,url,page,iconimage,fanart=''):
+def addLink(name,url,page,iconimage,fanart='',duration='00:00', published='0000-00-00', description=''):
         ok=True
 	if page != '':
 		u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&page="+str(page)+"&name="+urllib.quote_plus(name)
@@ -1074,6 +1145,16 @@ def addLink(name,url,page,iconimage,fanart=''):
 		u=url
         liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
         liz.setInfo( type="Video", infoLabels={ "Title": name } )
+
+	if duration != '00:00':
+		liz.setInfo('video', { 'Duration':duration })
+
+	if published != '0000-00-00':
+		liz.setInfo('video', {'Aired':published})
+
+	if description != '':
+		liz.setInfo('video', { 'plot':description })
+
 	#liz.setProperty('IsPlayable', 'false')
 	if fanart!='':
 		liz.setProperty('fanart_image', fanart)

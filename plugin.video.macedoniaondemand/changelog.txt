@@ -1,3 +1,6 @@
+v1.2.0
+    - Support for MRT Play Series and episodes
+
 v1.1.9
     - Reverted 24vesti support for previous episodes
 
