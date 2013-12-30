@@ -471,7 +471,7 @@ def createmrtplayLiveListing():
 	match=re.compile('<a href="(.+?)" title="(.+?)">\n.+?<img src="(.+?)" alt="">').findall(link)
 	return match
 
-def playmrtlive(url):
+def playmrtvideo(url):
 	pDialog = xbmcgui.DialogProgress()
 	pDialog.create('MRT Play live stream', 'Initializing')
 	req = urllib2.Request(url)
@@ -481,12 +481,16 @@ def playmrtlive(url):
 	link = response.read()
 	response.close()
 
-	streamlink = re.compile('"baseUrl":"(.+?)"').findall(link)
+	rtmplink = re.compile('"netConnectionUrl":"(.+?)"').findall(link)
+	rtmpurl = re.compile('"provider":"rtmp","url":"(.+?)"').findall(link)
+	rtmpswf = re.compile('"rtmpInstream":{"url":"(.+?)"}}').findall(link)
+	#rtmpdump -r "rtmp://stream1-prod.spectar.tv:1935/mrt-edge/_definst_" -a "mrt-edge/_definst_" -f "LNX 11,2,202,238" -W "http://189a88d8-production-mrt.static.spectar.tv/flow_player/swf/flowplayer.commercial-3.2.8.swf" -p "http://play.mrt.com.mk" -y "mrt1/low-mid.stream" -o low-mid.stream.flv
+
 	listitem = xbmcgui.ListItem('МРТ play');
 
 	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
 	play.clear()
-	play.add(streamlink[0]+'/master.m3u8', listitem)
+	play.add(rtmplink[0]+' pageUrl=http://play.mrt.com.mk swfUrl='+rtmpswf[0]+' playpath='+rtmpurl[0]+' swfVfy=true flashver="LNX 10,0,32,18"', listitem)
 	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
 	pDialog.update(70, 'Playing')
 	player.play(play)
@@ -516,37 +520,6 @@ def listMRTEpisodes(url):
 	response.close()
 	match=re.compile('<article.+?\n.+?data-title="(.+?)"\n.+?data-description="(.+?)"\n.+?data-length="(.+?)"\n.+?data-published="(.+?)"\n.+?>\n.+?<div class="playDisplayTable">\n.+?<a href="(.+?)".+?\n.+?\n.+?\n.+?<img.+?src="(.+?)"').findall(link)
 	return match
-
-def playMRTVideo(url):
-	pDialog = xbmcgui.DialogProgress()
-	pDialog.create('MRT Video', 'Initializing')
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	pDialog.update(50, 'Fetching video stream')
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-
-	match2=re.compile('"playlist":\[{"url":"(.+?)"').findall(link)
-	match1 = re.compile('"baseUrl":"(.+?)"').findall(link)
-	title = re.compile('<meta property="og:title" content="(.+?)"').findall(link)
-	if match2 != [] and match1 != []:
-		playurl=match1[0]+"/"+match2[0]
-		playurl=playurl[:playurl.rfind('/')]+'/master.m3u8'
-		if title != []:
-			videotitle = title[0]
-		else:
-			videtitle = 'MRT Video'
-		listitem = xbmcgui.ListItem(videotitle)
-		play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-		play.clear()
-		play.add(playurl, listitem)
-		player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
-		pDialog.update(70, 'Playing')
-		player.play(play)
-		pDialog.close()
-
-	return True
 
 #  OTHER live streams methods
 
@@ -856,7 +829,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'playmrtlive':
-		playmrtlive(url)
+		playmrtvideo(url)
 
 	elif page == 'live_zulumk':
 		listing = createZuluListing()
@@ -1009,7 +982,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'play_mrt_video':
-		playMRTVideo(url)
+		playmrtvideo(url)
 
 	elif page == 'alsat_front':
 		addDir('Последни емисии', 'alsat_15latest', '', '')
