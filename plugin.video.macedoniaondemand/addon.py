@@ -295,10 +295,12 @@ def play24VestiVesti():
 	return True
 
 def create24VestiEmisiiListing(urlpagenr):
-	if urlpagenr == '':
+	if urlpagenr == None or urlpagenr == '':
 		url = 'http://24vesti.mk/video/emisii'
 	else:
 		url = 'http://24vesti.mk/video/emisii?page='+urlpagenr
+
+	print "url="+url
 
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
@@ -997,7 +999,7 @@ def PROCESS_PAGE(page,url='',name=''):
 				addLink(title, u, '24vesti_playvideo', thumb,'http://a1on.mk/wordpress/wp-content/uploads/2013/01/olivera-trajkovska.jpg')
 			else:
 				addLink(title, u, '24vesti_playvideo', thumb)
-		if url == '':
+		if url == '' or url == None:
 			addDir('Претходно', '24vesti_emisii', '1', '')
 		else:
 			urlpage = int(url)+1
