@@ -580,6 +580,16 @@ def createMRTPlaySeries():
 	else:
 		return []
 
+def mrtplay_listall():
+	url = 'http://play.mrt.com.mk/channel'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('<li class=".+?" data-category=".+?"><a href="(.+?)" class=".+?">(.+?)</a></li>').findall(link)
+	return match
+
 def listMRTEpisodes(url):
 	url = 'http://play.mrt.com.mk'+url
 	req = urllib2.Request(url)
@@ -1060,9 +1070,17 @@ def PROCESS_PAGE(page,url='',name=''):
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
+	elif page == 'mrtplay_listall':
+		listing = mrtplay_listall()
+		for url, title in listing:
+			addLink(title, url, 'play_mrt_video', '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
 	elif page == 'mrtplay_listseries':
 		listing = createMRTPlaySeries()
 
+		addDir('СИТЕ ', 'mrtplay_listall', '', '')
 		for url, category, title in listing:
 			addDir(title, 'list_mrt_episodes', url, '')
 
