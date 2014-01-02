@@ -12,12 +12,81 @@ from BeautifulSoup import BeautifulSoup
 
 user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:11.0) Gecko/20100101 Firefox/11.0'
 str_accept = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
-DIR_USERDATA = xbmc.translatePath(xbmcaddon.Addon("plugin.video.macedoniaondemand").getAddonInfo('profile'))
+
+ADDON=__settings__ = xbmcaddon.Addon(id='plugin.video.macedoniaondemand')
+DIR_USERDATA = xbmc.translatePath(ADDON.getAddonInfo('profile'))
 VERSION_FILE = DIR_USERDATA+'version.txt'
-__version__ = xbmcaddon.Addon("plugin.video.macedoniaondemand").getAddonInfo("version")
+VISITOR_FILE = DIR_USERDATA+'visitor.txt'
+
+__version__ = ADDON.getAddonInfo("version")
 
 if not os.path.isdir(DIR_USERDATA):
 	os.makedirs(DIR_USERDATA)
+
+def platformdef():
+	if xbmc.getCondVisibility('system.platform.osx'):
+		if xbmc.getCondVisibility('system.platform.atv2'):
+			log_path = '/var/mobile/Library/Preferences'
+			log = os.path.join(log_path, 'xbmc.log')
+			logfile = open(log, 'r').read()
+		else:
+			log_path = os.path.join(os.path.expanduser('~'), 'Library/Logs')
+			log = os.path.join(log_path, 'xbmc.log')
+			logfile = open(log, 'r').read()
+	elif xbmc.getCondVisibility('system.platform.ios'):
+		log_path = '/var/mobile/Library/Preferences'
+		log = os.path.join(log_path, 'xbmc.log')
+		logfile = open(log, 'r').read()
+	elif xbmc.getCondVisibility('system.platform.windows'):
+		log_path = xbmc.translatePath('special://home')
+		log = os.path.join(log_path, 'xbmc.log')
+		logfile = open(log, 'r').read()
+	elif xbmc.getCondVisibility('system.platform.linux'):
+		log_path = xbmc.translatePath('special://home/temp')
+		log = os.path.join(log_path, 'xbmc.log')
+		logfile = open(log, 'r').read()
+	else:
+		logfile='Starting XBMC (Unknown Git:.+?Platform: Unknown. Built.+?'
+
+	match=re.compile('Starting XBMC \((.+?) Git:.+?Platform: (.+?)\. Built.+?').findall(logfile)
+	for build, platform in match:
+		if re.search('12.0',build,re.IGNORECASE):
+			build="Frodo"
+		if re.search('11.0',build,re.IGNORECASE):
+			build="Eden"
+		if re.search('13.0',build,re.IGNORECASE):
+			build="Gotham"
+		return platform
+
+	return "Unknown"
+
+def fread(filename):
+	ver = ''
+	h = open(filename, "r")
+	try:
+		data = h.read()
+	finally:
+		h.close()
+	return data
+
+def fwrite(filename, data):
+	h = open(filename, "wb")
+	try:
+		h.write(data)
+	finally:
+		h.close()
+
+def get_visitorid():
+	if os.path.isfile(VISITOR_FILE):
+		visitor_id = fread(VISITOR_FILE)
+	else:
+		from random import randint
+		visitor_id = str(randint(0, 0x7fffffff))
+		fwrite(VISITOR_FILE, visitor_id)
+
+	return visitor_id
+
+__visitor__ = get_visitorid()
 
 def get_params():
         param=[]
@@ -715,7 +784,7 @@ def playKanal5Video(url, name):
 
 def registerVersion(ver):
 	result = True
-	url = 'http://macedoniaondemand.com/register_plugin.php?ver='+ver
+	url = 'http://macedoniaondemand.com/register_plugin.php?ver='+ver+'&platform='+urllib.quote(platformdef())
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
 	try:
@@ -726,7 +795,34 @@ def registerVersion(ver):
 		result = False
 	return result
 
+def sendto_ga(page,url='',name=''):
+	try:
+		if page == None or page == '':
+			page = 'Home Page'
+
+		ga_link = 'http://www.google-analytics.com/collect?payload_data&v=1&tid=UA-40698392-3&cid='+__visitor__+'&t=appview&an=Macedonia%20On%20Demand&av='+__version__+'&cd='
+
+		if page != None and page != '':
+			ga_link += urllib.quote(page)
+
+		if name != None and name != '':
+			ga_link += '('+urllib.quote(name)+')'
+
+		if url != None and url != '':
+			ga_link += '('+urllib.quote(url)+')'
+
+		req = urllib2.Request(ga_link)
+		req.add_header('User-Agent', user_agent)
+		response = urllib2.urlopen(req)
+		link=response.read()
+		response.close()
+	except:
+		return True
+
+
 def PROCESS_PAGE(page,url='',name=''):
+
+	sendto_ga(page,url,name)
 
 	if page == None:
 		addDir('Телевизија', 'tv_front', '', '')
@@ -1091,24 +1187,6 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'playKanal5Video':
 		playKanal5Video(url, name)
-
-
-
-def fread(filename):
-	ver = ''
-	h = open(filename, "r")
-	try:
-		data = h.read()
-	finally:
-		h.close()
-	return data
-
-def fwrite(filename, data):
-	h = open(filename, "wb")
-	try:
-		h.write(data)
-	finally:
-		h.close()
 
 def addLink(name,url,page,iconimage,fanart='',duration='00:00', published='0000-00-00', description=''):
         ok=True
