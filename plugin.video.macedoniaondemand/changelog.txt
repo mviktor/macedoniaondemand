@@ -1,3 +1,7 @@
+v1.2.2
+    - [mtvplay] Support for listing all videos
+    - Track events through google analytics
+
 v1.2.1
     - Bugfix in MRT play (changed to rtmp streaming)
 
