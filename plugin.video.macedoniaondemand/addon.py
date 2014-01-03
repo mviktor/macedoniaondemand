@@ -559,7 +559,7 @@ def playmrtvideo(url):
 
 	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
 	play.clear()
-	play.add(rtmplink[0]+' pageUrl=http://play.mrt.com.mk swfUrl='+rtmpswf[0]+' playpath='+rtmpurl[0]+' swfVfy=true flashver="LNX 10,0,32,18"', listitem)
+	play.add(rtmplink[0]+' pageUrl=http://play.mrt.com.mk swfUrl='+rtmpswf[0]+' playpath='+rtmpurl[0]+' swfVfy=true timeout=15 flashver="LNX 10,0,32,18"', listitem)
 	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
 	pDialog.update(70, 'Playing')
 	player.play(play)

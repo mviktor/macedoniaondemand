@@ -1,3 +1,6 @@
+v1.2.3
+    - [mtvplay] add 15sec timeout on live streams
+
 v1.2.2
     - [mtvplay] Support for listing all videos
     - Track events through google analytics
