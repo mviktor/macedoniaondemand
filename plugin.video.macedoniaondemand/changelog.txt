@@ -1,3 +1,6 @@
+v1.2.4
+    - [mrtplay] update after latest redesign of web page
+
 v1.2.3
     - [mtvplay] add 15sec timeout on live streams
 

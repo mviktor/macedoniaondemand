@@ -530,15 +530,37 @@ def playSitelDnevnik():
 
 #  MTV methods
 
-def createmrtplayLiveListing():
-	url = 'http://play.mrt.com.mk/epg/linear'
+def createmrtfrontList():
+	url = 'http://play.mrt.com.mk/'
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	match=re.compile('<a href="(.+?)" title="(.+?)">\n.+?<img src="(.+?)" alt="">').findall(link)
+	match=re.compile('<li class="">\n        <a href="(.+?)">\n            (.+?)        </a>\t\n    </li>').findall(link)
 	return match
+
+def list_mrtchannel(url):
+	url = 'http://play.mrt.com.mk'+url
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	list=[]
+	match=re.compile('<div class="col-xs-6 col-sm-3 (.+?) content">\n.+?<a href="(.+?)".+?\n.+?<img src="(.+?)".+?\n.+?\n.+?<span class="title gradient">(.+?)</span>').findall(link)
+
+	# extract channels
+	for type,url,thumb,title in match:
+		list.append([type,url,thumb,'',title])
+
+	match=re.compile('<div class="col-xs-6 col-sm-3 (.+?) content">\n.+?<a href="(.+?)".+?\n.+?<img src="(.+?)".+?\n.+?\n.+?<span class="duration">(.+?)</span>\n.+?<span class="title gradient">(.+?)</span>').findall(link)
+
+	# extract latest videos on current channel
+	for type,url,thumb,duration,title in match:
+		list.append([type,url,thumb,duration,title])
+
+	return list
 
 def playmrtvideo(url):
 	pDialog = xbmcgui.DialogProgress()
@@ -566,39 +588,6 @@ def playmrtvideo(url):
 	pDialog.close()
 
 	return True
-
-def createMRTPlaySeries():
-	url = 'http://play.mrt.com.mk/channel'
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	match=re.compile('<a class=".+?" href="(.+?)" data-category="(.+?)" data-category-name="(.+?)">').findall(link)
-	if match != []:
-		return match[1:]
-	else:
-		return []
-
-def mrtplay_listall():
-	url = 'http://play.mrt.com.mk/channel'
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	match=re.compile('<li class=".+?" data-category=".+?"><a href="(.+?)" class=".+?">(.+?)</a></li>').findall(link)
-	return match
-
-def listMRTEpisodes(url):
-	url = 'http://play.mrt.com.mk'+url
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	match=re.compile('<article.+?\n.+?data-title="(.+?)"\n.+?data-description="(.+?)"\n.+?data-length="(.+?)"\n.+?data-published="(.+?)"\n.+?>\n.+?<div class="playDisplayTable">\n.+?<a href="(.+?)".+?\n.+?\n.+?\n.+?<img.+?src="(.+?)"').findall(link)
-	return match
 
 #  OTHER live streams methods
 
@@ -922,20 +911,10 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'live_front':
 		addDir('telekabel.com.mk', 'live_telekabelmk', '', '')
 		addDir('zulu.mk', 'live_zulumk', '', '')
-		addDir('мрт play', 'live_mrtplay', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
+		addDir('мрт play', 'list_mrtlive', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'live_mrtplay':
-		listing = createmrtplayLiveListing()
-		for link, title, thumb in listing:
-			addLink(title, link.strip(), 'playmrtlive', thumb)
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'playmrtlive':
-		playmrtvideo(url)
 
 	elif page == 'live_zulumk':
 		listing = createZuluListing()
@@ -1065,33 +1044,30 @@ def PROCESS_PAGE(page,url='',name=''):
 		playSitelDnevnik()
 
 	elif page == "mrt_front":
-		addDir('Програми', 'mrtplay_listseries', '', 'http://189a88d8-production-mrt.static.spectar.tv/uploads/84/images/a5fc505a068e25f14aee9fa5e2e84162c26bb3d7.png')
-		addDir('Канали','live_mrtplay', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'mrtplay_listall':
-		listing = mrtplay_listall()
-		for url, title in listing:
-			addLink(title, url, 'play_mrt_video', '')
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'mrtplay_listseries':
-		listing = createMRTPlaySeries()
-
-		addDir('СИТЕ ', 'mrtplay_listall', '', '')
-		for url, category, title in listing:
-			addDir(title, 'list_mrt_episodes', url, '')
+		listing = createmrtfrontList()
+		for url,channel in listing:
+			addDir(channel, 'list_mrtchannel', url, '')
+		addDir('ВО ЖИВО', 'list_mrtlive', '', '')
 
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-	elif page == 'list_mrt_episodes':
-		listing = listMRTEpisodes(url)
-		if listing != []:
-			for title,descr,duration,publish,url,thumb in listing:
-				addLink(title, url, 'play_mrt_video', thumb, '', duration, publish, descr)
+	elif page == 'list_mrtlive':
+		addLink('МРТ 1', 'http://play.mrt.com.mk/epg/linear/3551', 'play_mrt_video', 'http://2fff8da-production-mrt.static.spectar.tv/client_api.php/image/transform/tasks/thumbnail_fit/width/88/height/32/video_id/3551')
+		addLink('МРТ 2', 'http://play.mrt.com.mk/epg/linear/3548', 'play_mrt_video', 'http://2fff8da-production-mrt.static.spectar.tv/client_api.php/image/transform/tasks/thumbnail_fit/width/88/height/32/video_id/3548')
+		addLink('СОБРАНИСКИ КАНАЛ', 'http://play.mrt.com.mk/epg/linear/3545', 'play_mrt_video', 'http://2fff8da-production-mrt.static.spectar.tv/client_api.php/image/transform/tasks/thumbnail_fit/width/88/height/32/video_id/3545')
+		addLink('МРТ 1 САТ', 'http://play.mrt.com.mk/epg/linear/3925', 'play_mrt_video', 'http://2fff8da-production-mrt.static.spectar.tv/client_api.php/image/transform/tasks/thumbnail_fit/width/88/height/32/video_id/3925')
+		addLink('МРТ 2 САТ', 'http://play.mrt.com.mk/epg/linear/4047', 'play_mrt_video', 'http://2fff8da-production-mrt.static.spectar.tv/client_api.php/image/transform/tasks/thumbnail_fit/width/88/height/32/video_id/4047')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'list_mrtchannel':
+		listing = list_mrtchannel(url)
+		for type,url,thumb,duration,title in listing:
+			if type=="video":
+				addLink(title, url, 'play_mrt_video', thumb, '', duration)
+			elif type=="channel":
+				addDir(">>  "+title, 'list_mrtchannel', url, thumb)
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
