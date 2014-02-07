@@ -265,7 +265,7 @@ def createOffnetRadioListing():
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	match=re.compile('<a id=".+?" data-stream="(.+?)" data-frequency="(.+?)">(.+?)</a>').findall(link)
+	match=re.compile('<a class=".+?" data-id=".+?" data-stream="(.+?)" data-frequency="(.*?)">(.+?)</a>').findall(link[link.find('block-views-live-stream-block'):])
 	#for stream,freq,name in match:
 	#	print freq+" "+name+" "+stream
 	return match
@@ -540,6 +540,13 @@ def createmrtfrontList():
 	match=re.compile('<li class="">\n        <a href="(.+?)">\n            (.+?)        </a>\t\n    </li>').findall(link)
 	return match
 
+def duration_in_minutes(duration):
+	split_duration=duration.split(':')
+	minutes=0
+	for i in range(0, len(split_duration)-1):
+		minutes = minutes*60 + int(split_duration[i])
+	return minutes
+
 def list_mrtchannel(url):
 	url = 'http://play.mrt.com.mk'+url
 	req = urllib2.Request(url)
@@ -558,7 +565,7 @@ def list_mrtchannel(url):
 
 	# extract latest videos on current channel
 	for type,url,thumb,duration,title in match:
-		list.append([type,url,thumb,duration,title])
+		list.append([type,url,thumb,str(duration_in_minutes(duration)),title])
 
 	return list
 
@@ -572,20 +579,26 @@ def playmrtvideo(url):
 	link = response.read()
 	response.close()
 
-	rtmplink = re.compile('"netConnectionUrl":"(.+?)"').findall(link)
-	rtmpurl = re.compile('"provider":"rtmp","url":"(.+?)"').findall(link)
-	rtmpswf = re.compile('"rtmpInstream":{"url":"(.+?)"}}').findall(link)
-	#rtmpdump -r "rtmp://stream1-prod.spectar.tv:1935/mrt-edge/_definst_" -a "mrt-edge/_definst_" -f "LNX 11,2,202,238" -W "http://189a88d8-production-mrt.static.spectar.tv/flow_player/swf/flowplayer.commercial-3.2.8.swf" -p "http://play.mrt.com.mk" -y "mrt1/low-mid.stream" -o low-mid.stream.flv
+	match2=re.compile('"playlist":\[{"url":"(.+?)"').findall(link)
+	match1 = re.compile('"baseUrl":"(.+?)"').findall(link)
 
-	listitem = xbmcgui.ListItem('МРТ play');
+	title = re.compile('<meta property="og:title" content="(.+?)"').findall(link)
 
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
-	play.add(rtmplink[0]+' pageUrl=http://play.mrt.com.mk swfUrl='+rtmpswf[0]+' playpath='+rtmpurl[0]+' swfVfy=true timeout=15 flashver="LNX 10,0,32,18"', listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
-	pDialog.update(70, 'Playing')
-	player.play(play)
-	pDialog.close()
+	if match2 != [] and match1 != []:
+		playurl=match1[0]+"/"+match2[0]
+		playurl=playurl[:playurl.rfind('/')]+'/master.m3u8'
+		if title != []:
+			videotitle = title[0]
+		else:
+			videotitle = 'MRT Video'
+		listitem = xbmcgui.ListItem(videotitle)
+		play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+		play.clear()
+		play.add(playurl, listitem)
+		player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+		pDialog.update(70, 'Playing')
+		player.play(play)
+		pDialog.close()
 
 	return True
 
@@ -863,16 +876,8 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == "liveradio_offnet":
 		listing = createOffnetRadioListing()
-		total=0
-		count=0
 		for stream, freq, title in listing:
-			total=total+1
-
-		for stream, freq, title in listing:
-			#print freq+" "+name+" "+stream
-			count=count+1
-			if count > total/2:
-				addLink(freq+" "+title, 'rtmp://off.net.mk/radio app=radio pageUrl=http://off.net.mk swfUrl=http://off.net.mk/sites/all/libraries/jwplayer/player.swf live=true playpath='+stream+' timeout=3 swfVfy=true', '', '')
+			addLink((freq+" "+title).strip(), 'rtmp://off.net.mk/radio app=radio pageUrl=http://off.net.mk swfUrl=http://off.net.mk/sites/all/libraries/jwplayer/player.swf live=true playpath='+stream+' timeout=3 swfVfy=true', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 

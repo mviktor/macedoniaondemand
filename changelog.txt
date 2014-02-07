@@ -1,3 +1,9 @@
+v1.2.5
+    bugfix in mrtplay and offnet radio
+
+    mrtplay switched back to http streaming
+    offnet radio parser updated due to page update
+
 v1.2.4
     - [mrtplay] update after latest redesign of web page
 
