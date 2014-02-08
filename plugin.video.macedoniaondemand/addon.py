@@ -362,7 +362,9 @@ def play24VestiVideo(url):
 def createNovatvListing(page):
 	url = 'http://novatv.mk/index.php?navig=8&cat='
 
-	if page == 'novatv_evrozum':
+	if page == 'novatv_makedonija':
+		url += '2'
+	elif page == 'novatv_evrozum':
 		url += '9'
 	elif page == 'novatv_sekulovska':
 		url += '8'
@@ -568,6 +570,16 @@ def list_mrtchannel(url):
 		list.append([type,url,thumb,str(duration_in_minutes(duration)),title])
 
 	return list
+
+def list_mrtlive():
+	url = 'http://play.mrt.com.mk/'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('<a class="channel" href="(.+?)" data-id=".+?" title="(.+?)">\n.*?<img src="(.+?)"').findall(link[0:link.find('</ul>')])
+	return match
 
 def playmrtvideo(url):
 	pDialog = xbmcgui.DialogProgress()
@@ -999,6 +1011,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		play24VestiVideo(url)
 
 	elif page == 'novatv_front':
+		addDir('Македонија', 'novatv_makedonija', '', '')
 		addDir('Еврозум', 'novatv_evrozum', '', '')
 		addDir('Секуловска', 'novatv_sekulovska', '', '')
 		addDir('Документ', 'novatv_dokument', '', '')
@@ -1058,11 +1071,10 @@ def PROCESS_PAGE(page,url='',name=''):
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'list_mrtlive':
-		addLink('МРТ 1', 'http://play.mrt.com.mk/epg/linear/3551', 'play_mrt_video', 'http://2fff8da-production-mrt.static.spectar.tv/client_api.php/image/transform/tasks/thumbnail_fit/width/88/height/32/video_id/3551')
-		addLink('МРТ 2', 'http://play.mrt.com.mk/epg/linear/3548', 'play_mrt_video', 'http://2fff8da-production-mrt.static.spectar.tv/client_api.php/image/transform/tasks/thumbnail_fit/width/88/height/32/video_id/3548')
-		addLink('СОБРАНИСКИ КАНАЛ', 'http://play.mrt.com.mk/epg/linear/3545', 'play_mrt_video', 'http://2fff8da-production-mrt.static.spectar.tv/client_api.php/image/transform/tasks/thumbnail_fit/width/88/height/32/video_id/3545')
-		addLink('МРТ 1 САТ', 'http://play.mrt.com.mk/epg/linear/3925', 'play_mrt_video', 'http://2fff8da-production-mrt.static.spectar.tv/client_api.php/image/transform/tasks/thumbnail_fit/width/88/height/32/video_id/3925')
-		addLink('МРТ 2 САТ', 'http://play.mrt.com.mk/epg/linear/4047', 'play_mrt_video', 'http://2fff8da-production-mrt.static.spectar.tv/client_api.php/image/transform/tasks/thumbnail_fit/width/88/height/32/video_id/4047')
+		listing = list_mrtlive()
+		for url,title,thumb in listing:
+			addLink(title, url, 'play_mrt_video', thumb)
+
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 

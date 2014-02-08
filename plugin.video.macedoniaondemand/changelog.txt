@@ -1,3 +1,7 @@
+v1.2.6
+    - [mrtplay] list live channels dynamically
+    - [novatv] makedonija - page added
+
 v1.2.5
     bugfix in mrtplay and offnet radio
 
