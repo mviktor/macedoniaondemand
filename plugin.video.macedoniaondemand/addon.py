@@ -803,6 +803,90 @@ def playKanal5Video(url, name):
 	pDialog.close()
 	return True
 
+# serbiaplus methods
+
+def listSerbiaPlusCategories():
+	url='http://www.serbiaplus.com/'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('<li class="cat-item .+?"><a href="(.+?)" title=".+?">(.+?)</a>').findall(link)
+
+	return match
+
+def listSerbiaPlusTVs(url):
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('<div class="moviefilm">\n.*?<a href="(.+?)">\n.*?<img src="(.+?)" alt="(.+?)".*?\n').findall(link)
+
+	return match
+
+def playSerbiaPlusStream(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('Serbia PLus', 'Initializing')
+
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(50, 'Finding stream')
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+
+	stream=findSerbiaPlusStream(link)
+
+	if stream != '':
+		listitem = xbmcgui.ListItem(name)
+		play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+		play.clear()
+		play.add(stream, listitem)
+		player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+		pDialog.update(80, 'Playing')
+		player.play(play)
+		return True
+	else:
+		pDialog.close()
+		return False
+
+def serbiaplussearchurl(intext):
+	if intext.find("file:") != -1:
+		stream=re.compile('file: "(.+?)"').findall(intext)
+	elif intext.find("application/x-vlc-plugin") != -1:
+		stream=re.compile('target="(.+?)"').findall(intext)
+	else:
+		stream=[]
+
+	if stream != []:
+		return stream[0]
+	else:
+		return ''
+
+def findSerbiaPlusStream(htmltext):
+	start = -1
+	end = -1
+	start=htmltext.find("filmicerik")
+	if start != -1:
+		end = htmltext[start:].find("</div>")
+
+	if start == -1 or end == -1:
+		return ''
+
+	searcharea = htmltext[start:start+end]
+
+	if searcharea.find("document.write")!=-1:
+		start = searcharea.find("document.write")
+		end = searcharea[start:].find("')")
+		encframe = searcharea[start+16:start+end]
+		decframe = encframe.decode("string-escape")
+		stream = serbiaplussearchurl(decframe)
+	else:
+		stream = serbiaplussearchurl(searcharea)
+
+	return stream
 
 # general methods
 
@@ -929,9 +1013,31 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('telekabel.com.mk', 'live_telekabelmk', '', '')
 		addDir('zulu.mk', 'live_zulumk', '', '')
 		addDir('мрт play', 'list_mrtlive', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
+		addDir('serbiaplus (beta)', 'serbiaplus_front', '', 'http://www.serbiaplus.com/wp-content/uploads/2013/11/logofront.png')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'serbiaplus_front':
+		listing = listSerbiaPlusCategories()
+		for url, title in listing:
+			title=title.replace('&#8211;', '-')
+			title=title.replace('&amp;', '&')
+			addDir(title, 'serbiaplus_stations', url, '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'serbiaplus_stations':
+		listing = listSerbiaPlusTVs(url)
+		for url, thumb, title in listing:
+			title=title.replace('&#8211;', '-')
+			title=title.replace('&amp;', '&')
+			addLink(title, url, 'playserbiaplus_stream', thumb)
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'playserbiaplus_stream':
+		playSerbiaPlusStream(url)
 
 	elif page == 'live_zulumk':
 		listing = createZuluListing()

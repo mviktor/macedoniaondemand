@@ -1,3 +1,6 @@
+v1.2.8
+    - [serbiaplus] support added
+
 v1.2.7
     - [hrt] list all series
 
