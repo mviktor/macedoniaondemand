@@ -1253,7 +1253,10 @@ def PROCESS_PAGE(page,url='',name=''):
 				uptitle=re.compile('<p class="uptitle">.*?\n(.+?)\n').findall(content, start)
 				startfiles=content.find('<div class="files">', start)
 
-				files=re.compile('<a href="(.+?)"').findall(content, startfiles, next)
+				if next != -1:
+					files=re.compile('<a href="(.+?)"').findall(content, startfiles, next)
+				else:
+					files=re.compile('<a href="(.+?)"').findall(content, startfiles)
 				if title != [] and uptitle != [] and files != [] and thumb != []:
 					addLink(title[0].strip()+' - '+uptitle[0].strip().replace('&nbsp;', ' '), 'http://www.rts.rs'+files[1], '', 'http://www.rts.rs'+thumb[0], art)
 
