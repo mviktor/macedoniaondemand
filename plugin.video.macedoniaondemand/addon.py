@@ -732,7 +732,7 @@ def listSerbiaPlusTVs(url):
 
 def playSerbiaPlusStream(url):
 	pDialog = xbmcgui.DialogProgress()
-	pDialog.create('Serbia PLus', 'Initializing')
+	pDialog.create('Serbia Plus', 'Initializing')
 
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
@@ -768,16 +768,15 @@ def findSerbiaPlusStream(htmltext):
 	start = -1
 	end = -1
 	start=htmltext.find("filmicerik")
-	if start != -1:
-		end = htmltext[start:].find("</div>")
 
-	if start == -1 or end == -1:
+	if start == -1:
 		return ''
 
 	searcharea = htmltext[start:start+end]
+	searcharea = htmltext[start:]
 
-	if searcharea.find("document.write")!=-1:
-		start = searcharea.find("document.write")
+	if searcharea.find("document.write('\\x")!=-1:
+		start = searcharea.find("document.write('\\x")
 		end = searcharea[start:].find("')")
 		encframe = searcharea[start+16:start+end]
 		decframe = encframe.decode("string-escape")
