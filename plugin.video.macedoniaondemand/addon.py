@@ -140,15 +140,8 @@ def playZuluStream(url):
 	#streammatch = re.compile('<a class="playButton" href="(.+?)">').findall(link)
 	streammatch = re.compile('<video .+? src="(.+?)"').findall(link)
 	titlematch = re.compile('class="title">(.+?)</h1>').findall(link)
-	listitem = xbmcgui.ListItem(titlematch[0] + ' - ВО ЖИВО');
-
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
-	play.add(streammatch[0], listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+	playurl(streammatch[0])
 	pDialog.update(80, 'Playing')
-	player.play(play)
-	pDialog.close()
 
 	return True
 
@@ -188,57 +181,12 @@ def playTelekabelStream(url):
 	link = response.read()
 	streammatch = re.compile("file:'(.+?)'").findall(link)
 
-	#titlematch = re.compile('class="title">(.+?)</h1>').findall(link)
-	#listitem = xbmcgui.ListItem(titlematch[0] + ' - ВО ЖИВО')
-	listitem = xbmcgui.ListItem('Телекабел стриминг во живо')
-
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
-	play.add(streammatch[0], listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
 	pDialog.update(80, 'Playing')
-	player.play(play)
+	playurl(streammatch[0])
 	pDialog.close()
 
 	return True
 
-
-# MAKTEL methods
-
-def createMaktelListing():
-	url='http://maktel.mk/'
-
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	match=re.compile('\t\t\t\t\t\t<div class = \'item\' id = \'.+?\'>\r\n\t\t   \t<a href="(.+?)" class="fancybox fancybox.ajax">\r\n\t\t   \t\t  \t   \t<img class = \'image\' src="(.+?)" width="319" height="260" /><img src="images/play1.png" style="position:absolute;margin-top:60px;margin-left:80px;" />  \t  \t   \t</a> \r\n.+?<div class = \'text\'>\r\n\t\t\t<div class = \'title\'>\r\n\t\t    <div class = \'desc\'>\r\n\t\t   \t<span>(.+?)</span>\r\n\t\t\t</div>\t\r\n\t\t\t</div>\r\n\t\t    </div>\r\n\t\t\t</div>').findall(link)
-
-	#for link, thumb, descr in match:
-	#	print descr
-
-	return match
-
-def playMaktelVideo(url):
-	pDialog = xbmcgui.DialogProgress()
-	pDialog.create('Maktel Video', 'Initializing')
-
-	listitem = xbmcgui.ListItem('Maktel Video');
-
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
-	if url.__contains__('youtube'):
-		play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+url.split('/')[4], listitem)
-	else:
-		play.add(url, listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
-
-	pDialog.update(60, 'Playing')
-	player.play(play)
-	pDialog.close()
-
-	return True
 
 
 # ON NET methods
@@ -284,14 +232,8 @@ def play24VestiVesti():
 	response.close()
 	match=re.compile('file: "(.+?)"').findall(link)
 
-	listitem = xbmcgui.ListItem('24vesti.com.mk - Вести')
-
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
-	play.add('http://24vesti.com.mk'+match[0]+'|Cookie=macedoniaondemand', listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
 	pDialog.update(80, 'Playing')
-	player.play(play)
+	playurl('http://24vesti.com.mk'+match[0]+'|Cookie=macedoniaondemand')
 	pDialog.close()
 	return True
 
@@ -338,20 +280,16 @@ def play24VestiVideo(url):
 
 	filematch = re.compile('<param name="movie" value="(.+?)"').findall(link)
 	titlematch = re.compile('<title>(.+?)</title>').findall(link)
-	listitem = xbmcgui.ListItem(titlematch[0]);
 
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
 	if filematch[0].__contains__('dailymotion'):
-		play.add('plugin://plugin.video.dailymotion_com/?url='+filematch[0].split('/')[-1]+'&mode=playVideo', listitem)
+		stream = 'plugin://plugin.video.dailymotion_com/?url='+filematch[0].split('/')[-1]+'&mode=playVideo'
 	elif filematch[0].__contains__('youtube'):
-		play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1], listitem)
+		stream = 'plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1]
 	else:
-		play.add(filematch[0], listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+		stream = filematch[0]
 
 	pDialog.update(60, 'Playing')
-	player.play(play)
+	playurl(stream)
 	pDialog.close()
 
 	return True
@@ -465,13 +403,9 @@ def playRadiomkstream(url):
 		streammatch = re.compile('file=(.+?);').findall(link)
 		if streammatch == []:
 			streammatch = re.compile('<embed src="(.+?)"').findall(link)
-	listitem = xbmcgui.ListItem(titlematch[0]);
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
-	play.add(streammatch[0], listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+
 	pDialog.update(60, 'Playing')
-	player.play(play)
+	playurl(streammatch[0])
 	pDialog.close()
 
 	return True
@@ -500,34 +434,23 @@ def playSitelVideo(url):
 
 	filematch = re.compile('file: "(.+?)"').findall(link)
 	titlematch = re.compile('<title>(.+?)</title>').findall(link)
-	listitem = xbmcgui.ListItem(titlematch[0]);
 
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
 	if filematch[0].__contains__('rtmp'):
 		rtmpurl = filematch[0]
 		app=rtmpurl.split('/')[3]+'/'
 		apos=rtmpurl.find(app)
 		y=rtmpurl[apos+len(app):]
-		play.add(rtmpurl[:apos+len(app)]+' app='+app+' pageUrl=http://sitel.com.mk swfUrl=http://sitel.com.mk/sites/all/libraries/jw.player/jwplayer.flash.swf playpath='+y+' swfVfy=true flashver="LNX 10,0,32,18"', listitem)
+		stream = rtmpurl[:apos+len(app)]+' app='+app+' pageUrl=http://sitel.com.mk swfUrl=http://sitel.com.mk/sites/all/libraries/jw.player/jwplayer.flash.swf playpath='+y+' swfVfy=true'
 	else:
-		play.add(filematch[0], listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+		stream = filematch[0]
 	pDialog.update(90, 'Playing')
-	player.play(play)
+	playurl(stream)
 	pDialog.close()
 
 	return True
 
 def playSitelDnevnik():
-	listitem = xbmcgui.ListItem('Сител Дневник')
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
-	#play.add('http://sitel.com.mk/sites/default/files/dnevnik/dnevnik/dnevnik.mp4', listitem)
-	play.add('rtmp://video.sitel.com.mk/vod/ app=vod/ pageUrl=http://sitel.com.mk swfUrl=http://sitel.com.mk/sites/all/libraries/jw.player/jwplayer.flash.swf playpath=mp4:default/files/dnevnik/dnevnik/dnevnik.mp4 swfVfy=true flashver="LNX 10,0,32,18"', listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
-	player.play(play)
-
+	playurl('rtmp://video.sitel.com.mk/vod/ app=vod/ pageUrl=http://sitel.com.mk swfUrl=http://sitel.com.mk/sites/all/libraries/jw.player/jwplayer.flash.swf playpath=mp4:default/files/dnevnik/dnevnik/dnevnik.mp4 swfVfy=true')
 	return True
 
 #  MTV methods
@@ -597,19 +520,14 @@ def playmrtvideo(url):
 	title = re.compile('<meta property="og:title" content="(.+?)"').findall(link)
 
 	if match2 != [] and match1 != []:
-		playurl=match1[0]+"/"+match2[0]
-		playurl=playurl[:playurl.rfind('/')]+'/master.m3u8'
+		stream=match1[0]+"/"+match2[0]
+		stream=stream[:stream.rfind('/')]+'/master.m3u8'
 		if title != []:
 			videotitle = title[0]
 		else:
 			videotitle = 'MRT Video'
-		listitem = xbmcgui.ListItem(videotitle)
-		play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-		play.clear()
-		play.add(playurl, listitem)
-		player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
 		pDialog.update(70, 'Playing')
-		player.play(play)
+		playurl(stream)
 		pDialog.close()
 
 	return True
@@ -673,17 +591,13 @@ def playAlsatVideo(url):
 
 	filematch = re.compile('file:"(.+?)"').findall(link)
 	titlematch = re.compile('<title>(.+?)</title>').findall(link)
-	listitem = xbmcgui.ListItem(titlematch[0]);
 
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
 	if filematch[0].__contains__('youtu.be'):
-		play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1].strip(), listitem)
+		stream = 'plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1].strip()
 	else:
-		play.add(filematch[0], listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+		stream = filematch[0]
 	pDialog.update(90, 'Playing')
-	player.play(play)
+	playurl(stream)
 	pDialog.close()
 
 	return True
@@ -735,17 +649,13 @@ def playHRTVideo(url):
 
 	filematch = re.compile('<video data-url="(.+?)"').findall(link)
 	titlematch = re.compile('<title>(.+?)</title>').findall(link)
-	listitem = xbmcgui.ListItem(titlematch[0]);
 
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
 	if filematch[0].__contains__('youtu.be'):
-		play.add('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1].strip(), listitem)
+		url = 'plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1].strip()
 	else:
-		play.add(filematch[0], listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+		url = filematch[0]
 	pDialog.update(90, 'Playing')
-	player.play(play)
+	playurl(url)
 	pDialog.close()
 
 	return True
@@ -792,14 +702,8 @@ def playKanal5Video(url, name):
 	response.close()
 	match = re.compile('file: "(.+?)",').findall(link)
 
-	listitem = xbmcgui.ListItem(name+' ')
-
-	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-	play.clear()
-	play.add(match[1]+'|Cookie=macedoniaondemand', listitem)
-	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
 	pDialog.update(80, 'Playing')
-	player.play(play)
+	playurl(match[1]+'|Cookie=macedoniaondemand')
 	pDialog.close()
 	return True
 
@@ -840,13 +744,8 @@ def playSerbiaPlusStream(url):
 	stream=findSerbiaPlusStream(link)
 
 	if stream != '':
-		listitem = xbmcgui.ListItem(name)
-		play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-		play.clear()
-		play.add(stream, listitem)
-		player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
 		pDialog.update(80, 'Playing')
-		player.play(play)
+		playurl(stream)
 		return True
 	else:
 		pDialog.close()
@@ -927,6 +826,23 @@ def sendto_ga(page,url='',name=''):
 	except:
 		return True
 
+def playurl(url):
+	if name == '':
+		guititle = 'Video'
+	else:
+		guititle = name
+
+	if url[:7] == 'rtmp://':
+		url = url + ' timeout=10'
+
+	listitem = xbmcgui.ListItem(guititle)
+	play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+	play.clear()
+	play.add(url, listitem)
+	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
+	player.play(play)
+	return True
+
 
 def PROCESS_PAGE(page,url='',name=''):
 
@@ -980,7 +896,6 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == "tv_front":
 		stations = []
-		#stations.append(["Мактел", "maktel_front", ''])
 		stations.append(["24 Вести", "24vesti_front", ''])
 		stations.append(["НОВА ТВ", "novatv_front", ''])
 		stations.append(["Сител", "sitel_front", ''])
@@ -997,15 +912,6 @@ def PROCESS_PAGE(page,url='',name=''):
 			addDir(statname, statpage, '', '', fanart)
 
 		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-
-	elif page == 'maktel_front':
-		listing = createMaktelListing()
-		for link, thumb, title in listing:
-			# instead of a link we'll use thumb -> easy to construct youtube link from it
-			addLink(title, thumb, 'playmaktelvideo', thumb)
-		setView('files', 500)
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 
@@ -1073,15 +979,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		nr = int(url[1:])
 		listing = createOtherListing()
 		item=listing[nr]
-		listitem = xbmcgui.ListItem(item[0])
-		play=xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-		play.clear()
-		play.add(item[1], listitem)
-		player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
-		player.play(play)
-
-	elif page=='playmaktelvideo':
-		playMaktelVideo(url)
+		playurl(item[1])
 
 	elif page == '24vesti_front':
 		addLink('Вести', '', '24vesti_vesti', '')
