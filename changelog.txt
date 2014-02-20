@@ -1,3 +1,6 @@
+v1.3.0
+    - RTS: Emisije
+
 v1.2.9
     - [hrt] move hrt1 & hrt4 live links to hrt folder
     - Remove RussiaToday & Heart UK streams.

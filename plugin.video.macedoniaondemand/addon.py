@@ -536,7 +536,6 @@ def playmrtvideo(url):
 
 def createOtherListing():
 	list=[]
-	list.append(['RTS SAT', 'http://rts.videostreaming.rs/rts', 'http://www.rts.rs/upload/storyBoxImageData/2008/07/19/18865/rts%20logo.bmp'])
 	list.append(['Al Jazeera Balkans', 'rtmp://aljazeeraflashlivefs.fplive.net/aljazeeraflashlive-live app=aljazeeraflashlive-live swfUrl=http://www.nettelevizor.com/playeri/player.swf pageUrl=http://ex-yu-tv-streaming.blogspot.se playpath=aljazeera_balkans_high live=true swfVfy=true', 'http://balkans.aljazeera.net/profiles/custom/themes/aljazeera_balkans/images/banner.png'])
 	return list
 
@@ -837,6 +836,15 @@ def playurl(url):
 	player.play(play)
 	return True
 
+def readurl(url):
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	return link
+
+
 
 def PROCESS_PAGE(page,url='',name=''):
 
@@ -895,9 +903,9 @@ def PROCESS_PAGE(page,url='',name=''):
 		stations.append(["Сител", "sitel_front", ''])
 		stations.append(["МРТ Play", "mrt_front", ''])
 		stations.append(["AlsatM", "alsat_front", ''])
-		stations.append(["HRT", "hrt_front", ''])
 		stations.append(["Kanal5", "kanal5_front", ''])
-
+		stations.append(["HRT", "hrt_front", ''])
+		stations.append(["РТС", "rts_front", ''])
 
 		stations.append(["", "break", ''])
 		stations.append(["Гледај во живо", "live_front", ''])
@@ -1199,6 +1207,61 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'playKanal5Video':
 		playKanal5Video(url, name)
+
+	elif page == 'rts_front':
+
+		addLink('РТС Уживо', 'http://rts.videostreaming.rs/rts', '', 'http://www.rts.rs/upload/storyBoxImageData/2008/07/19/18865/rts%20logo.bmp')
+		addDir('', 'break', '', '')
+
+		content=readurl('http://www.rts.rs/page/podcast/ci.html')
+		start=0
+		while True:
+			start=content.find('<h1>', start)
+			if start != -1:
+				delim=content.find('</h1>', start)
+				station=content[start+4:delim]
+				next=content.find('<h1>', start+4)
+				if next==-1:
+					next=content.find('<div id="right">', start+4)
+				match=re.compile('<a href="(.+?)".*?>(.+?)</a>').findall(content[start:next])
+				for url, title in match:
+					addDir(station+"   "+title, 'list_rts_episodes', url, '')
+				start=start+4
+			else:
+				break
+
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'list_rts_episodes':
+		art=''
+		content=readurl('http://www.rts.rs'+url)
+		metadata=re.compile('<meta name="description" content="(.+?)"').findall(content)
+		if metadata != []:
+			image=re.compile('src=&#034;(.+?)&#034;').findall(metadata[0])
+			if image != []:
+				art=image[0]
+
+			start=0
+			while True:
+				start = content.find('<tr class="first"', start)
+				if start == -1:
+					break;
+				next = content.find('<tr class="first"', start+16)
+				thumb=re.compile('<img src="(.+?)"').findall(content, start)
+				title=re.compile('title="(.+?)"').findall(content, start)
+				uptitle=re.compile('<p class="uptitle">.*?\n(.+?)\n').findall(content, start)
+				startfiles=content.find('<div class="files">', start)
+
+				files=re.compile('<a href="(.+?)"').findall(content, startfiles, next)
+				if title != [] and uptitle != [] and files != [] and thumb != []:
+					addLink(title[0].strip()+' - '+uptitle[0].strip().replace('&nbsp;', ' '), 'http://www.rts.rs'+files[1], '', 'http://www.rts.rs'+thumb[0], art)
+
+				start=start+16
+
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
 
 def addLink(name,url,page,iconimage,fanart='',duration='00:00', published='0000-00-00', description=''):
         ok=True
