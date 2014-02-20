@@ -536,8 +536,6 @@ def playmrtvideo(url):
 
 def createOtherListing():
 	list=[]
-	list.append(['HRT1', 'http://5323.live.streamtheworld.com/HTV1?streamtheworld_user=1&nobuf=1361039552824', 'http://www.247webtv.com/wp-content/uploads/2012/05/hrt1.jpg'])
-	list.append(['HRT4', 'http://4623.live.streamtheworld.com/HRT4?streamtheworld_user=1&nobuf=1384296611008', 'http://images3.wikia.nocookie.net/__cb20121221162236/logopedia/images/d/dc/HRT4.png'])
 	list.append(['RTS SAT', 'http://rts.videostreaming.rs/rts', 'http://www.rts.rs/upload/storyBoxImageData/2008/07/19/18865/rts%20logo.bmp'])
 	list.append(['Al Jazeera Balkans', 'rtmp://aljazeeraflashlivefs.fplive.net/aljazeeraflashlive-live app=aljazeeraflashlive-live swfUrl=http://www.nettelevizor.com/playeri/player.swf pageUrl=http://ex-yu-tv-streaming.blogspot.se playpath=aljazeera_balkans_high live=true swfVfy=true', 'http://balkans.aljazeera.net/profiles/custom/themes/aljazeera_balkans/images/banner.png'])
 	return list
@@ -1161,6 +1159,9 @@ def PROCESS_PAGE(page,url='',name=''):
 		playAlsatVideo(url)
 
 	elif page == 'hrt_front':
+		addLink('HRT1 Live', 'http://5323.live.streamtheworld.com/HTV1?streamtheworld_user=1&nobuf=1361039552824', '', 'http://upload.wikimedia.org/wikipedia/commons/1/1f/HRT1_Logo_aktuell.jpg')
+		addLink('HRT4 Live', 'http://4623.live.streamtheworld.com/HRT4?streamtheworld_user=1&nobuf=1384296611008', '', 'http://images3.wikia.nocookie.net/__cb20121221162236/logopedia/images/d/dc/HRT4.png')
+		addDir('', 'break', '', '')
 		listing = createHRTSeriesListing()
 		for link, title in listing:
 			addDir(title, 'list_hrt_episodes', link, '')
