@@ -750,6 +750,11 @@ def serbiaplussearchurl(intext):
 		stream=re.compile('file: "(.+?)"').findall(intext)
 	elif intext.find("application/x-vlc-plugin") != -1:
 		stream=re.compile('target="(.+?)"').findall(intext)
+	elif intext.find("flashvars=") != -1:
+		tmp=re.compile('flashvars="src=(.+?)"').findall(intext)
+		if tmp != []:
+			stream=[urllib.unquote_plus(tmp[0])]
+			stream[0]=stream[0].split(' ')[0]
 	else:
 		stream=[]
 
@@ -825,7 +830,7 @@ def playurl(url):
 	else:
 		guititle = name
 
-	if url[:7] == 'rtmp://':
+	if url[:4] == 'rtmp':
 		url = url + ' timeout=10'
 
 	listitem = xbmcgui.ListItem(guititle)
@@ -927,6 +932,9 @@ def PROCESS_PAGE(page,url='',name=''):
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'serbiaplus_front':
+		addDir('NEW ADDITIONS', 'serbiaplus_newadditions', '', '')
+		addDir('MOST VIEWED', 'serbiaplus_mostviewed', '', '')
+		addDir('', 'break', '', '')
 		listing = listSerbiaPlusCategories()
 		for url, title in listing:
 			title=title.replace('&#8211;', '-')
@@ -935,11 +943,17 @@ def PROCESS_PAGE(page,url='',name=''):
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
-	elif page == 'serbiaplus_stations':
-		listing = listSerbiaPlusTVs(url)
+	elif page=='serbiaplus_stations' or page =='serbiaplus_newadditions' or page=='serbiaplus_mostviewed':
+		if page=='serbiaplus_stations':
+			listing = listSerbiaPlusTVs(url)
+		elif page=='serbiaplus_newadditions':
+			listing = listSerbiaPlusTVs('http://www.serbiaplus.com/')
+		elif page=='serbiaplus_mostviewed':
+			listing = listSerbiaPlusTVs('http://www.serbiaplus.com/en-cok-izlenenler/')
 		for url, thumb, title in listing:
 			title=title.replace('&#8211;', '-')
 			title=title.replace('&amp;', '&')
+			title=title.replace('&#038;', '&')
 			addLink(title, url, 'playserbiaplus_stream', thumb)
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
