@@ -1226,6 +1226,10 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'rts_front':
 
 		addLink('РТС Уживо', 'http://rts.videostreaming.rs/rts', '', 'http://www.rts.rs/upload/storyBoxImageData/2008/07/19/18865/rts%20logo.bmp')
+		addLink('Радио Београд 1', 'http://rts.ipradio.rs:8002', '', '')
+		addLink('Радио Београд 2/ Радио Београд 3', 'http://rts.ipradio.rs:8004', '', '')
+		addLink('Радио Београд 202', 'http://rts.ipradio.rs:8006', '', '')
+		addLink('Радио Београд стереорама (Викендом)', 'http://rts.ipradio.rs:8008', '', '')
 		addDir('', 'break', '', '')
 
 		content=readurl('http://www.rts.rs/page/podcast/ci.html')
