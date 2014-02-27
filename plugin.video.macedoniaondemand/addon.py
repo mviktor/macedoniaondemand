@@ -755,6 +755,7 @@ def serbiaplussearchurl(intext):
 		if tmp != []:
 			stream=[urllib.unquote_plus(tmp[0])]
 			stream[0]=stream[0].split(' ')[0]
+			stream[0]=stream[0].split('&')[0]
 	else:
 		stream=[]
 
