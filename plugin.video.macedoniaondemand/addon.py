@@ -792,19 +792,6 @@ def findSerbiaPlusStream(htmltext):
 
 # general methods
 
-def registerVersion(ver):
-	result = True
-	url = 'http://macedoniaondemand.com/register_plugin.php?ver='+ver+'&platform='+urllib.quote(platformdef())
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	try:
-		response = urllib2.urlopen(req)
-		link = response.read()
-		response.close()
-	except:
-		result = False
-	return result
-
 def sendto_ga(page,url='',name=''):
 	try:
 		if page == None or page == '':
@@ -1012,10 +999,10 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == '24vesti_emisii':
 		listing = create24VestiEmisiiListing(url)
 		for u,thumb,title in listing:
-			if title.__contains__('WIN-WIN'):
+			if title.__contains__('Вин Вин'):
 				addLink(title, u, '24vesti_playvideo', thumb,'http://a1on.mk/wordpress/wp-content/uploads/2013/01/olivera-trajkovska.jpg')
 			else:
-				addLink(title, u, '24vesti_playvideo', thumb)
+				addLink(title, u, '24vesti_playvideo', thumb, thumb)
 		if url == '' or url == None:
 			addDir('Претходно', '24vesti_emisii', '1', '')
 		else:
@@ -1348,8 +1335,7 @@ if os.path.isfile(VERSION_FILE):
 	old_version = fread(VERSION_FILE)
 
 if old_version != __version__:
-	result = registerVersion(__version__)
-	#result = True
+	result = True
 	if result:
 		fwrite(VERSION_FILE, __version__)
 result = True
