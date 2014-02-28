@@ -1,3 +1,7 @@
+v1.3.4
+   - [24vesti] Подршка за стари емисии
+   - xbmc gotham compatibility
+
 v1.3.3
    - [RTS] add support for radio streams
    - [serbiaplus] additional improvement in filtering video streams
