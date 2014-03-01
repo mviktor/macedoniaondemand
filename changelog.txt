@@ -1,3 +1,7 @@
+v1.3.5
+   - [gotham] remove beautifulsoup completely
+   - [serbiaplus] revert some old changes
+
 v1.3.4
    - [24vesti] Подршка за стари емисии
    - xbmc gotham compatibility
