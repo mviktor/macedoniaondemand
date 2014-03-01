@@ -8,7 +8,6 @@
 
 import urllib,urllib2,re,xbmcplugin,xbmcaddon,xbmcgui,HTMLParser
 import sys,os,os.path
-from BeautifulSoup import BeautifulSoup
 
 user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:11.0) Gecko/20100101 Firefox/11.0'
 str_accept = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
