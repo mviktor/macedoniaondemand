@@ -504,7 +504,9 @@ def list_mrtlive():
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	match=re.compile('<a class="channel" href="(.+?)" data-id=".+?" title="(.+?)">\n.*?<img src="(.+?)"').findall(link[0:link.find('</ul>')])
+	start=link.find('<ul class="dropdown-menu text-left')
+	end=link.find('</ul', start)
+	match=re.compile('<a class="channel" href=".+?" data-href="(.+?)" .+? title="(.+?)">\n.*?<img src="(.+?)"').findall(link[start:end])
 	return match
 
 def playmrtvideo(url):
