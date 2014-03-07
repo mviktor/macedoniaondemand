@@ -1,3 +1,7 @@
+v1.3.6
+   - [serbiaplus] support for listing next pages
+   - [mrtplay] list live channels
+
 v1.3.5
    - [gotham] remove beautifulsoup completely
    - [serbiaplus] revert some old changes
