@@ -726,8 +726,12 @@ def listSerbiaPlusTVs(url):
 	link=response.read()
 	response.close()
 	match=re.compile('<div class="moviefilm">\n.*?<a href="(.+?)">\n.*?<img src="(.+?)" alt="(.+?)".*?\n').findall(link)
+	nextpagematch=re.compile("<span class='current'>.+?</span><a href='(.+?)'").findall(link)
+	nextpage=''
+	if nextpagematch!=[]:
+		nextpage=nextpagematch[0]
 
-	return match
+	return [match, nextpage]
 
 def playSerbiaPlusStream(url):
 	pDialog = xbmcgui.DialogProgress()
@@ -943,11 +947,13 @@ def PROCESS_PAGE(page,url='',name=''):
 			listing = listSerbiaPlusTVs('http://www.serbiaplus.com/')
 		elif page=='serbiaplus_mostviewed':
 			listing = listSerbiaPlusTVs('http://www.serbiaplus.com/en-cok-izlenenler/')
-		for url, thumb, title in listing:
+		for url, thumb, title in listing[0]:
 			title=title.replace('&#8211;', '-')
 			title=title.replace('&amp;', '&')
 			title=title.replace('&#038;', '&')
 			addLink(title, url, 'playserbiaplus_stream', thumb)
+		if listing[1] != '':
+			addDir('Next page', 'serbiaplus_stations', listing[1], '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
