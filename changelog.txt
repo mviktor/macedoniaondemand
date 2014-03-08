@@ -1,3 +1,6 @@
+v1.3.7
+   - [serbiaplus] fix for: star sports, fox sports, novars hd
+
 v1.3.6
    - [serbiaplus] support for listing next pages
    - [mrtplay] list live channels

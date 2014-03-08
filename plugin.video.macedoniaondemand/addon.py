@@ -759,17 +759,17 @@ def serbiaplussearchurl(intext):
 		stream=re.compile('file: "(.+?)"').findall(intext)
 	elif intext.find("application/x-vlc-plugin") != -1:
 		stream=re.compile('target="(.+?)"').findall(intext)
-	elif intext.find("flashvars=") != -1:
+	elif intext.find('flashvars="src') != -1:
 		tmp=re.compile('flashvars="src=(.+?)"').findall(intext)
 		if tmp != []:
-			stream=[urllib.unquote_plus(tmp[0])]
+			stream=[urllib.unquote_plus(tmp[0]).strip()]
 			stream[0]=stream[0].split(' ')[0]
 			stream[0]=stream[0].split('&#')[0]
 	else:
 		stream=[]
 
 	if stream != []:
-		return stream[0]
+		return HTMLParser.HTMLParser().unescape(stream[0])
 	else:
 		return ''
 
