@@ -1,3 +1,6 @@
+v1.3.8
+   - [volim.tv] support
+
 v1.3.7
    - [serbiaplus] fix for: star sports, fox sports, novars hd
 

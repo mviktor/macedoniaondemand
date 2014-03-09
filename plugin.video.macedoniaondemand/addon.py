@@ -16,6 +16,8 @@ ADDON=__settings__ = xbmcaddon.Addon(id='plugin.video.macedoniaondemand')
 DIR_USERDATA = xbmc.translatePath(ADDON.getAddonInfo('profile'))
 VERSION_FILE = DIR_USERDATA+'version.txt'
 VISITOR_FILE = DIR_USERDATA+'visitor.txt'
+VOLIMTV_UID  = DIR_USERDATA+'volimtvuid.txt'
+VOLIMTV_PWD  = DIR_USERDATA+'volimtvpwd.txt'
 
 __version__ = ADDON.getAddonInfo("version")
 
@@ -795,6 +797,91 @@ def findSerbiaPlusStream(htmltext):
 
 	return stream
 
+# volimtv methods
+
+def setVolimtvMailPass():
+	currentlogindetails = getVolimtvMailPass()
+	currentuid=''
+	currentpwd=''
+	if currentlogindetails != False:
+		currentuid = currentlogindetails.get('email')
+		currentpwd = currentlogindetails.get('pass')
+	kb = xbmc.Keyboard('', 'volim.tv login', False)
+	kb.setHeading('Enter volim.tv username/email')
+	kb.setHiddenInput(False)
+	kb.setDefault(currentuid)
+	kb.doModal()
+	if (kb.isConfirmed()):
+		email=kb.getText()
+		kb = xbmc.Keyboard('', 'volim.tv login', True)
+		kb.setHeading('Enter volim.tv password')
+		kb.setHiddenInput(True)
+		kb.setDefault(currentpwd)
+		kb.doModal()
+		if (kb.isConfirmed()):
+			passwd=kb.getText()
+			fwrite(VOLIMTV_UID, email)
+			fwrite(VOLIMTV_PWD, passwd)
+			return True
+	return False
+
+def getVolimtvMailPass():
+	if os.path.isfile(VOLIMTV_UID):
+		volimtv_uid = fread(VOLIMTV_UID)
+		if os.path.isfile(VOLIMTV_PWD):
+			volimtv_pwd = fread(VOLIMTV_PWD)
+			return {'email':volimtv_uid, 'pass':volimtv_pwd}
+	return False
+
+
+def listVolimtv():
+	url='http://www.volim.tv/rts-1'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile("url\(http://www.volim.tv/images/design/watchlive.png\);' href='(.+?)'>(.+?)</a>").findall(link)
+
+	return match
+
+def playvolimtvurl(url):
+	logindata = getVolimtvMailPass()
+	if logindata == False:
+		return False
+	loginurl='http://www.volim.tv/includes/ajax/login.php'
+
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('volim.tv', 'Initializing')
+
+	pDialog.update(30, 'Verifying userid and password')
+	req = urllib2.Request(loginurl)
+	req.add_header('User-Agent', user_agent)
+	req.add_data(urllib.urlencode(logindata))
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	if link.find('location.reload();') == -1:
+		pDialog.close()
+		xbmcgui.Dialog().ok('Macedonia On Demand', 'Wrong username or password.', 'Register on http://volim.tv', 'And edit Settings on this page')
+		return False
+	cookiestr = response.info().get('set-cookie')
+
+	pDialog.update(50, 'Fetching video stream')
+
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	req.add_header('Cookie', cookiestr)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	match=re.compile("ipadUrl: '(.+?)'").findall(link)
+	if match != []:
+		pDialog.update(90, 'Playing')
+		playurl(match[0])
+	pDialog.close()
+	return True
+
 # general methods
 
 def sendto_ga(page,url='',name=''):
@@ -924,6 +1011,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('zulu.mk', 'live_zulumk', '', '')
 		addDir('мрт play', 'list_mrtlive', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
 		addDir('serbiaplus (beta)', 'serbiaplus_front', '', 'http://www.serbiaplus.com/wp-content/uploads/2013/11/logofront.png')
+		addDir('volim.tv', 'volimtv_front', '', '')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
@@ -959,6 +1047,21 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'playserbiaplus_stream':
 		playSerbiaPlusStream(url)
+
+	elif page == 'volimtv_front':
+		if getVolimtvMailPass() != False:
+			listing = listVolimtv()
+			for url, title in listing:
+				addLink(title, url, 'playvolimtv', '')
+		addDir('Settings', 'volimtv_settings', '', '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'volimtv_settings':
+		setVolimtvMailPass()
+
+	elif page == 'playvolimtv':
+		playvolimtvurl(url)
 
 	elif page == 'live_zulumk':
 		listing = createZuluListing()
