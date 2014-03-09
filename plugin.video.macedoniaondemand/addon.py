@@ -583,12 +583,8 @@ def createAlsat15mindebatLatest():
 def playAlsatVideo(url):
 	pDialog = xbmcgui.DialogProgress()
 	pDialog.create('Alsat Video', 'Initializing')
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
 	pDialog.update(50, 'Fetching video stream')
-	response = urllib2.urlopen(req)
-	link = response.read()
-	response.close()
+	link = readurl(url)
 
 	filematch = re.compile('file:"(.+?)"').findall(link)
 	titlematch = re.compile('<title>(.+?)</title>').findall(link)
@@ -848,6 +844,7 @@ def listVolimtv():
 def playvolimtvurl(url):
 	logindata = getVolimtvMailPass()
 	if logindata == False:
+		xbmcgui.Dialog().ok('Macedonia On Demand', 'Wrong username or password.', 'Register on http://volim.tv', 'And edit Settings on this page')
 		return False
 	loginurl='http://www.volim.tv/includes/ajax/login.php'
 
@@ -926,7 +923,11 @@ def playurl(url):
 	return True
 
 def readurl(url):
-	req = urllib2.Request(url)
+	if url==urllib.unquote(url):
+		quoted_url=urllib.quote(url).replace('%3A', ':')
+	else:
+		quoted_url=url
+	req = urllib2.Request(quoted_url)
 	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
 	link=response.read()
@@ -1020,6 +1021,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('NEW ADDITIONS', 'serbiaplus_newadditions', '', '')
 		addDir('MOST VIEWED', 'serbiaplus_mostviewed', '', '')
 		addDir('', 'break', '', '')
+
 		listing = listSerbiaPlusCategories()
 		for url, title in listing:
 			title=title.replace('&#8211;', '-')
@@ -1049,10 +1051,10 @@ def PROCESS_PAGE(page,url='',name=''):
 		playSerbiaPlusStream(url)
 
 	elif page == 'volimtv_front':
-		if getVolimtvMailPass() != False:
-			listing = listVolimtv()
-			for url, title in listing:
-				addLink(title, url, 'playvolimtv', '')
+		listing = listVolimtv()
+		for url, title in listing:
+			addLink(title, url, 'playvolimtv', '')
+		addDir('', 'break', '', '')
 		addDir('Settings', 'volimtv_settings', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
