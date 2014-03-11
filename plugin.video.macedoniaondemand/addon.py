@@ -608,7 +608,9 @@ def createHRTSeriesListing():
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	match=re.compile('<li><a href="(.+?)">(.+?)</a></li>\n                                    \n').findall(link)
+	start=link.find('<div class="all_shows">')
+	end=link.find('</div>', start)
+	match=re.compile('<li><a href="(.+?)">(.+?)</a></li>').findall(link[start:end])
 	return match
 
 def listHRTEpisodes(url):

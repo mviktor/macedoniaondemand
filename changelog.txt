@@ -1,3 +1,6 @@
+v1.4.0
+   - [hrt] fix listing of series
+
 v1.3.9
    - [alsat] cyrilic url fix
    - [volim.tv] list all tvs on start
