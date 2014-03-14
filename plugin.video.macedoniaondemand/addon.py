@@ -889,6 +889,34 @@ def playvolimtvurl(url):
 	pDialog.close()
 	return True
 
+# Violet Ch methods
+
+def listVioletChannels():
+	url = 'http://v094.violet.fastwebserver.de/'
+	content = readurl(url)
+	start = content.find('<div class="row channel">')
+	end = content.find('<div class="app-mobile">', start)
+	match = re.compile('<a href="(.+?)">\n.*?<img src="(.+?)" alt="(.+?)"').findall(content[start:end])
+	return match
+
+def playVioletChannel(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('Violet', 'Initializing')
+
+	pDialog.update(50, 'Finding stream')
+	content=readurl('http://v094.violet.fastwebserver.de'+url)
+	stream=serbiaplussearchurl(content)
+
+	if stream != '':
+		pDialog.update(80, 'Playing')
+		playurl(stream)
+		return True
+	else:
+		pDialog.close()
+		return False
+
+
+
 # general methods
 
 def sendto_ga(page,url='',name=''):
@@ -1023,9 +1051,20 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('мрт play', 'list_mrtlive', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
 		addDir('serbiaplus (beta)', 'serbiaplus_front', '', 'http://www.serbiaplus.com/wp-content/uploads/2013/11/logofront.png')
 		addDir('volim.tv', 'volimtv_front', '', '')
+		addDir('v094.violet', 'violet_front', '', '')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'violet_front':
+		listing = listVioletChannels()
+		for url, thumb, title in listing:
+			addLink(title, url, 'play_violet_tv', thumb)
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'play_violet_tv':
+		playVioletChannel(url)
 
 	elif page == 'serbiaplus_front':
 		addDir('NEW ADDITIONS', 'serbiaplus_newadditions', '', '')
