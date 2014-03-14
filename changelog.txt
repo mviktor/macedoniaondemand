@@ -1,3 +1,6 @@
+v1.4.2
+   - [serbiaplus] some of the stations got broken after 1.4.1 (novatv)
+
 v1.4.1
    - [serbiaplus] fix for pink premium, pink film, discovery
 

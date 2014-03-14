@@ -793,11 +793,13 @@ def findSerbiaPlusStream(htmltext):
 	else:
 		frame=searcharea
 
-	nextpage=re.compile('iframe.+?src="(.+?)"').findall(frame)
-	if nextpage!=[]:
-		frame=readurl(nextpage[0])
-
 	stream=serbiaplussearchurl(frame)
+
+	if stream == '':
+		nextpage=re.compile('iframe.+?src="(.+?)"').findall(frame)
+		if nextpage!=[]:
+			frame=readurl(nextpage[0])
+			stream = serbiaplussearchurl(frame)
 
 	return stream
 
