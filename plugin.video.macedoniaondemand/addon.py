@@ -789,9 +789,15 @@ def findSerbiaPlusStream(htmltext):
 		end = searcharea[start:].find("')")
 		encframe = searcharea[start+16:start+end]
 		decframe = encframe.decode("string-escape")
-		stream = serbiaplussearchurl(decframe)
+		frame=decframe
 	else:
-		stream = serbiaplussearchurl(searcharea)
+		frame=searcharea
+
+	nextpage=re.compile('iframe.+?src="(.+?)"').findall(frame)
+	if nextpage!=[]:
+		frame=readurl(nextpage[0])
+
+	stream=serbiaplussearchurl(frame)
 
 	return stream
 

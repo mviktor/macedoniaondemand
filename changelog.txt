@@ -1,3 +1,6 @@
+v1.4.1
+   - [serbiaplus] fix for pink premium, pink film, discovery
+
 v1.4.0
    - [hrt] fix listing of series
 
