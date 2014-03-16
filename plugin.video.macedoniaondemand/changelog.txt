@@ -1,3 +1,6 @@
+v1.4.4
+   - [serbiaplus] fix for streams begining with "file":"rtmp://.."
+
 v1.4.3
    - [violet channels] support for violet channels http://v094.violet.fastwebserver.de/
 

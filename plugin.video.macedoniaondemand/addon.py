@@ -755,8 +755,10 @@ def playSerbiaPlusStream(url):
 		return False
 
 def serbiaplussearchurl(intext):
-	if intext.find("file:") != -1:
+	if intext.find("file: \"") != -1:
 		stream=re.compile('file: "(.+?)"').findall(intext)
+	elif intext.find("\"file\"") != -1:
+		stream=re.compile(', *?"file":"(.+?)"').findall(intext)
 	elif intext.find("application/x-vlc-plugin") != -1:
 		stream=re.compile('target="(.+?)"').findall(intext)
 	elif intext.find('flashvars="src') != -1:
