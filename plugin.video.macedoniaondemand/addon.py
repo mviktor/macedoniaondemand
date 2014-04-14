@@ -117,13 +117,13 @@ def setView(content='movies', mode=503):
 # ZULU live 
 
 def createZuluListing():
-	url='http://on.net.mk/zulu'
+	url='http://on.net.mk/zulu_tv.aspx'
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	match=re.compile('<span class="field-content"><a href="/zulu/(.+?)"><img .+? src="(.+?)" /></a></span>').findall(link)
+	match=re.compile('<a href="(.+?)" > *?<img src="(.+?)" class="imgclassresponsive"').findall(link)
 	#for station, thumb in match:
 	#	print station, thumb
 	return match
@@ -131,18 +131,22 @@ def createZuluListing():
 def playZuluStream(url):
 	pDialog = xbmcgui.DialogProgress()
 	pDialog.create('Zulu Stream', 'Initializing')
-	req = urllib2.Request(url)
+	pDialog.update(30, 'Fetching video stream')
+	req = urllib2.Request('http://on.net.mk/'+url)
 	req.add_header('User-Agent', user_agent)
-	pDialog.update(50, 'Fetching video stream')
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	nextframe = re.compile('<iframe src="(.+?)"').findall(link)
+	pDialog.update(60, 'Fetching video stream')
+	req = urllib2.Request('http://on.net.mk/'+nextframe[0])
+	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
 	link = response.read()
 	response.close()
-
-	#streammatch = re.compile('<a class="playButton" href="(.+?)">').findall(link)
-	streammatch = re.compile('<video .+? src="(.+?)"').findall(link)
-	titlematch = re.compile('class="title">(.+?)</h1>').findall(link)
-	playurl(streammatch[0])
+	streammatch=re.compile('<video .+? src="(.+?)"').findall(link)
 	pDialog.update(80, 'Playing')
+	playurl(streammatch[0])
 
 	return True
 
@@ -187,23 +191,6 @@ def playTelekabelStream(url):
 	pDialog.close()
 
 	return True
-
-
-
-# ON NET methods
-
-def createOnnetRadioListing():
-	url='http://on.net.mk/radio'
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	match=re.compile('\t<li id="(.+?)">\n\t<a class="main-link" rel="(.+?)">(.+?)</a>\n\t<a class="external" href="(.+?)"></a>\n\t</li>\n').findall(link)
-
-	#for id, stream,descr,mp3stream in match:
-	#	print descr+' '+stream
-	return match
 
 # OFF NET methods
 
@@ -891,34 +878,6 @@ def playvolimtvurl(url):
 	pDialog.close()
 	return True
 
-# Violet Ch methods
-
-def listVioletChannels():
-	url = 'http://v094.violet.fastwebserver.de/'
-	content = readurl(url)
-	start = content.find('<div class="row channel">')
-	end = content.find('<div class="app-mobile">', start)
-	match = re.compile('<a href="(.+?)">\n.*?<img src="(.+?)" alt="(.+?)"').findall(content[start:end])
-	return match
-
-def playVioletChannel(url):
-	pDialog = xbmcgui.DialogProgress()
-	pDialog.create('Violet', 'Initializing')
-
-	pDialog.update(50, 'Finding stream')
-	content=readurl('http://v094.violet.fastwebserver.de'+url)
-	stream=serbiaplussearchurl(content)
-
-	if stream != '':
-		pDialog.update(80, 'Playing')
-		playurl(stream)
-		return True
-	else:
-		pDialog.close()
-		return False
-
-
-
 # general methods
 
 def sendto_ga(page,url='',name=''):
@@ -992,19 +951,8 @@ def PROCESS_PAGE(page,url='',name=''):
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == "liveradio_front":
-		addDir('on.net.mk', 'liveradio_onnet', '', '')
 		addDir('radiomk.com', 'liveradio_radiomk', '', '')
 		addDir('off.net.mk', 'liveradio_offnet', '', '')
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == "liveradio_onnet":
-		listing = createOnnetRadioListing()
-		counter=0
-		for radioid,rtmstream,descr,mp3stream in listing:
-			if counter > 14:
-				addLink(descr, 'rtmp://217.16.82.2/radio app=radio pageUrl=http://on.net.mk swfUrl=http://on.net.mk/radio/player/player.swf live=true playpath='+rtmstream+' timeout=3 swfVfy=true', '', '')
-			counter=counter+1
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -1053,20 +1001,9 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('мрт play', 'list_mrtlive', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
 		addDir('serbiaplus (beta)', 'serbiaplus_front', '', 'http://www.serbiaplus.com/wp-content/uploads/2013/11/logofront.png')
 		addDir('volim.tv', 'volimtv_front', '', '')
-		addDir('v094.violet', 'violet_front', '', '')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'violet_front':
-		listing = listVioletChannels()
-		for url, thumb, title in listing:
-			addLink(title, url, 'play_violet_tv', thumb)
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'play_violet_tv':
-		playVioletChannel(url)
 
 	elif page == 'serbiaplus_front':
 		addDir('NEW ADDITIONS', 'serbiaplus_newadditions', '', '')
@@ -1121,7 +1058,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		#for station, thumb in match:
 		#	print station, thumb
 		for station, thumb in listing:
-			addLink(station, 'http://on.net.mk/zulu/'+station, 'playzulustream', thumb)
+			addLink(station.split('=')[1], station, 'playzulustream', 'http://on.net.mk/'+thumb)
 		setView('files', 500)
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
