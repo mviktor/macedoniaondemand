@@ -702,7 +702,7 @@ def listSerbiaPlusCategories():
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	match=re.compile('<li class="cat-item .+?"><a href="(.+?)" title=".+?">(.+?)</a>').findall(link)
+	match=re.compile('<li class="cat-item .+?"><a href="(.+?)" title=".+?">(.+?)</a>').findall(link[link.find('Categories'):])
 
 	return match
 
