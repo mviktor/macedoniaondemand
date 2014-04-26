@@ -1003,7 +1003,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('zulu.mk', 'live_zulumk', '', '')
 		addDir('мрт play', 'list_mrtlive', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
 		addDir('serbiaplus (beta)', 'serbiaplus_front', '', 'http://www.serbiaplus.com/wp-content/uploads/2013/11/logofront.png')
-		addDir('volim.tv', 'volimtv_front', '', '')
+		addDir('volim.tv', 'volimtv_front', '', 'http://www.volim.tv/images/banners/logo.png')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
