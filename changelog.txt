@@ -1,3 +1,11 @@
+v1.4.5
+   - [volimtv] add logo
+   - [serbiaplus] limit frontpage to categories only
+   - [serbiaplus] support for youtube links (grandtv)
+   - [zulu] zulu.mk fixed after on.net redesign
+   - radio on.net.mk removed
+   - violet channels removed
+
 v1.4.4
    - [serbiaplus] fix for streams begining with "file":"rtmp://.."
 
