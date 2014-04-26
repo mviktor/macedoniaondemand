@@ -734,6 +734,9 @@ def playSerbiaPlusStream(url):
 	stream=findSerbiaPlusStream(link)
 
 	if stream != '':
+		if stream.__contains__('youtube.com'):
+			stream = 'plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+stream.split('=')[-1].strip()
+
 		pDialog.update(80, 'Playing')
 		playurl(stream)
 		return True
