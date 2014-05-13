@@ -1,3 +1,6 @@
+v1.4.6
+   - [serbiaplus] support for multiple streams
+
 v1.4.5
    - [volimtv] add logo
    - [serbiaplus] limit frontpage to categories only

@@ -706,13 +706,32 @@ def listSerbiaPlusCategories():
 
 	return match
 
+def listSerbiaPlusStreams(url):
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	ret = []
+	ret.append((url, 'S T R E A M 1'))
+	start=link.find('<div class="keremiya_part">')
+	if start != -1:
+		end=link.find('</div>', start)
+		match=re.compile('<a href="(.+?)"><span>(.+?)</span></a>').findall(link, start, end)
+		ret=ret+match
+
+	return ret
+
 def listSerbiaPlusTVs(url):
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	match=re.compile('<div class="moviefilm">\n.*?<a href="(.+?)">\n.*?<img src="(.+?)" alt="(.+?)".*?\n').findall(link)
+	end=link.find("<span class='current'>")
+	if end == -1:
+		end=len(link)
+	match=re.compile('<div class="moviefilm">\n.*?<a href="(.+?)">\n.*?<img src="(.+?)" alt="(.+?)".*?\n').findall(link, 0, end)
 	nextpagematch=re.compile("<span class='current'>.+?</span><a href='(.+?)'").findall(link)
 	nextpage=''
 	if nextpagematch!=[]:
@@ -1032,9 +1051,16 @@ def PROCESS_PAGE(page,url='',name=''):
 			title=title.replace('&#8211;', '-')
 			title=title.replace('&amp;', '&')
 			title=title.replace('&#038;', '&')
-			addLink(title, url, 'playserbiaplus_stream', thumb)
+			addDir(title, 'serbiaplus_liststreams', url, thumb)
 		if listing[1] != '':
 			addDir('Next page', 'serbiaplus_stations', listing[1], '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'serbiaplus_liststreams':
+		listing = listSerbiaPlusStreams(url)
+		for url, streamname in listing:
+			addLink(name+'  '+streamname.replace(' ', ''), url, 'playserbiaplus_stream', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
