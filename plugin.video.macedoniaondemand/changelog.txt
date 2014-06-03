@@ -1,3 +1,6 @@
+v1.4.7
+   - [zulu] fix zulu page after changes on on.net
+
 v1.4.6
    - [serbiaplus] support for multiple streams
 

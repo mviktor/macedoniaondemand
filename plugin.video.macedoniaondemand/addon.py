@@ -1087,7 +1087,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		#for station, thumb in match:
 		#	print station, thumb
 		for station, thumb in listing:
-			addLink(station.split('=')[1], station, 'playzulustream', 'http://on.net.mk/'+thumb)
+			addLink(station.split('/')[-1], station, 'playzulustream', 'http://on.net.mk/'+thumb)
 		setView('files', 500)
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
