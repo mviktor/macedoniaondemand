@@ -982,6 +982,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		listing = createRadiomkListing()
 		for link, thumb, title in listing:
 			addLink(title, link, 'radiomk_playstream', 'http://www.radiomk.com/live/'+thumb)
+		xbmc.executebuiltin("Container.SetViewMode(500)")
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -1054,6 +1055,7 @@ def PROCESS_PAGE(page,url='',name=''):
 			addDir(title, 'serbiaplus_liststreams', url, thumb)
 		if listing[1] != '':
 			addDir('Next page', 'serbiaplus_stations', listing[1], '')
+		xbmc.executebuiltin("Container.SetViewMode(500)")
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -1089,6 +1091,8 @@ def PROCESS_PAGE(page,url='',name=''):
 		for station, thumb in listing:
 			addLink(station.split('/')[-1], station, 'playzulustream', 'http://on.net.mk/'+thumb)
 		setView('files', 500)
+		xbmc.executebuiltin("Container.SetViewMode(500)")
+
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page=='playzulustream':

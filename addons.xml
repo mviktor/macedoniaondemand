@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <addons>
-<addon id="plugin.video.macedoniaondemand" name="Macedonia On Demand" version="1.4.7" provider-name="Viktor Mladenovski">
+<addon id="plugin.video.macedoniaondemand" name="Macedonia On Demand" version="1.4.8" provider-name="Viktor Mladenovski">
   <requires>
   </requires>
   <extension point="xbmc.python.pluginsource" library="addon.py">
