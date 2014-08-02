@@ -713,7 +713,7 @@ def listSerbiaPlusStreams(url):
 	link=response.read()
 	response.close()
 	ret = []
-	ret.append((url, 'S T R E A M 1'))
+	ret.append((url, 'CH  ..... 1'))
 	start=link.find('<div class="keremiya_part">')
 	if start != -1:
 		end=link.find('</div>', start)
@@ -768,6 +768,8 @@ def serbiaplussearchurl(intext):
 		stream=re.compile('file: "(.+?)"').findall(intext)
 	elif intext.find("\"file\"") != -1:
 		stream=re.compile(', *?"file":"(.+?)"').findall(intext)
+	elif intext.find("'file':") != -1:
+		stream=re.compile("'file' *?: *?'(.+?)'").findall(intext)
 	elif intext.find("application/x-vlc-plugin") != -1:
 		stream=re.compile('target="(.+?)"').findall(intext)
 	elif intext.find('flashvars="src') != -1:
@@ -792,13 +794,16 @@ def findSerbiaPlusStream(htmltext):
 	if start == -1:
 		return ''
 
-	searcharea = htmltext[start:start+end]
-	searcharea = htmltext[start:]
+	end=htmltext.find('id="report_as"', start)
+	if end != -1:
+		searcharea = htmltext[start:end]
+	else:
+		searcharea = htmltext[start:]
 
-	if searcharea.find("document.write('\\x")!=-1:
-		start = searcharea.find("document.write('\\x")
+	if searcharea.find("replaceWith('\\x")!=-1:
+		start = searcharea.find("replaceWith('\\x")
 		end = searcharea[start:].find("')")
-		encframe = searcharea[start+16:start+end]
+		encframe = searcharea[start+13:start+end]
 		decframe = encframe.decode("string-escape")
 		frame=decframe
 	else:
@@ -1022,7 +1027,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('telekabel.com.mk', 'live_telekabelmk', '', '')
 		addDir('zulu.mk', 'live_zulumk', '', '')
 		addDir('мрт play', 'list_mrtlive', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
-		addDir('serbiaplus (beta)', 'serbiaplus_front', '', 'http://www.serbiaplus.com/wp-content/uploads/2013/11/logofront.png')
+		addDir('serbiaplus (beta)', 'serbiaplus_front', '', 'http://www.serbiaplus.com/wp-content/uploads/2014/06/WEBLOGO.png')
 		addDir('volim.tv', 'volimtv_front', '', 'http://www.volim.tv/images/banners/logo.png')
 		addDir('останати...', 'live_other', '', '')
 		setView()
@@ -1062,7 +1067,7 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'serbiaplus_liststreams':
 		listing = listSerbiaPlusStreams(url)
 		for url, streamname in listing:
-			addLink(name+'  '+streamname.replace(' ', ''), url, 'playserbiaplus_stream', '')
+			addLink(name+'  '+streamname.replace(' ', '').replace('.....', ''), url, 'playserbiaplus_stream', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 

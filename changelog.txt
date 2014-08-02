@@ -1,3 +1,6 @@
+v1.4.9
+   - [serbiaplus] update plugin after serbiaplus update
+
 v1.4.8
    - show thumbnails for zulu, serbiaplus and radiomk in default view
 
