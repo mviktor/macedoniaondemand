@@ -693,6 +693,56 @@ def playKanal5Video(url, name):
 	pDialog.close()
 	return True
 
+# Telma methods
+
+def playTelmaVideo(shorturl):
+	url = 'http://www.telma.com.mk'+shorturl
+	req = urllib2.Request(url)
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('Telma Video', 'Initializing')
+	pDialog.update(50, 'Fetching video stream')
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	match=re.compile('<div class="mediaelement-video"><video.+?src="(.+?)" class="mediaelement-formatter').findall(link)
+	pDialog.update(90, 'Playing')
+	print "telma match="+match[0]
+	playurl(match[0])
+	pDialog.close()
+
+	return match
+
+def listTelmaVideos(shorturl):
+	url = ''
+	if shorturl == '' or shorturl == None:
+		shorturl = '/video'
+
+	url = 'http://telma.com.mk'+shorturl
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	link = link.replace('\n', ' ').replace('\r', ' ')
+	match=re.compile('<h2 property="dc:title" datatype="">.+?<a href=".+?">(.+?)</a>.+?<div class="post-date">(.+?)</div>.+?<video.+?src="(.+?)"').findall(link)
+	nextpage = ''
+	nextpagematch = re.compile('<li class="pager-next">.+?href="(.+?)">.+?</li>').findall(link)
+	if nextpagematch != []:
+		nextpage = nextpagematch[0]
+	return [match, nextpage]
+
+def listTelmaSeries():
+	url = 'http://telma.com.mk/emisii'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	link = link.replace('\n', ' ').replace('\r', ' ')
+	match=re.compile('<div class="views-field views-field-field-slika-statija">.+?<img.+?src="(.+?)".+?<span class="field-content"><a href="(.+?)">(.+?)</a>.+?<span class="date-display-single".+?>(.+?)</span>').findall(link)
+	return match
+
 # serbiaplus methods
 
 def listSerbiaPlusCategories():
@@ -1010,6 +1060,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		stations.append(["МРТ Play", "mrt_front", ''])
 		stations.append(["AlsatM", "alsat_front", ''])
 		stations.append(["Kanal5", "kanal5_front", ''])
+		stations.append(["Телма", "telma_front", ''])
 		stations.append(["HRT", "hrt_front", ''])
 		stations.append(["РТС", "rts_front", ''])
 
@@ -1357,6 +1408,36 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'playKanal5Video':
 		playKanal5Video(url, name)
+
+	elif page == 'telma_front':
+		addLink('Вести во 18:30', '', 'play_telma_vesti', '')
+		addDir('Видео', 'list_telma_videos', '', '')
+		addDir('Емисии', 'list_telma_series', '', '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'play_telma_vesti':
+		playTelmaVideo('/')
+
+	elif page == 'list_telma_videos':
+		listing = listTelmaVideos(url)
+		for Title,PostDate,Video in listing[0]:
+			addLink(Title+' '+PostDate, Video, '', '')
+		if listing[1] != '':
+			addDir('Следна Страна >', 'list_telma_videos', listing[1], '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'list_telma_series':
+		listing = listTelmaSeries()
+		for thumb, url, name, releasedate in listing:
+			addLink(name+" - "+releasedate,url,'play_telma_video',thumb)
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'play_telma_video':
+		playTelmaVideo(url)
+
 
 	elif page == 'rts_front':
 
