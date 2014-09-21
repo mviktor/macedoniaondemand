@@ -1,3 +1,7 @@
+v1.4.11
+   - [serbiaplus] initial support for redesigned site
+   - [telma] initial support added
+
 v1.4.10
    - [serbiaplus] marking it as broken. scheduled for removal.
 
