@@ -745,57 +745,33 @@ def listTelmaSeries():
 
 # serbiaplus methods
 
-def listSerbiaPlusCategories():
-	url='http://www.serbiaplus.com/'
-	req = urllib2.Request(url)
+def listSerbiaPlusTVs():
+	req = urllib2.Request('http://serbiaplus.atspace.tv')
 	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	match=re.compile('<li class="cat-item .+?"><a href="(.+?)" title=".+?">(.+?)</a>').findall(link[link.find('Categories'):])
-
+	match=re.compile('<a href="(.+?)".+?target="_blank"><div class="wpmd">\n<div align=center><font face=".+?" class="ws12">(.+?)</font></div>').findall(link)
 	return match
-
-def listSerbiaPlusStreams(url):
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	ret = []
-	ret.append((url, 'CH  ..... 1'))
-	start=link.find('<div class="keremiya_part">')
-	if start != -1:
-		end=link.find('</div>', start)
-		match=re.compile('<a href="(.+?)"><span>(.+?)</span></a>').findall(link, start, end)
-		ret=ret+match
-
-	return ret
-
-def listSerbiaPlusTVs(url):
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	end=link.find("<span class='current'>")
-	if end == -1:
-		end=len(link)
-	match=re.compile('<div class="moviefilm">\n.*?<a href="(.+?)">\n.*?<img src="(.+?)" alt="(.+?)".*?\n').findall(link, 0, end)
-	nextpagematch=re.compile("<span class='current'>.+?</span><a href='(.+?)'").findall(link)
-	nextpage=''
-	if nextpagematch!=[]:
-		nextpage=nextpagematch[0]
-
-	return [match, nextpage]
 
 def playSerbiaPlusStream(url):
 	pDialog = xbmcgui.DialogProgress()
 	pDialog.create('Serbia Plus', 'Initializing')
 
-	req = urllib2.Request(url)
+	req = urllib2.Request('http://serbiaplus.atspace.tv/'+url)
 	req.add_header('User-Agent', user_agent)
-	pDialog.update(50, 'Finding stream')
+	pDialog.update(40, 'Finding stream')
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+
+	matchframe=re.compile('<iframe name="iFrame1" .+?src="(.+?)" ').findall(link)
+	if matchframe==[]:
+		pDialog.close()
+		return False
+	req = urllib2.Request('http://serbiaplus.atspace.tv'+matchframe[0])
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(80, 'Finding stream')
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
@@ -837,35 +813,28 @@ def serbiaplussearchurl(intext):
 		return ''
 
 def findSerbiaPlusStream(htmltext):
-	start = -1
+	start = 0
 	end = -1
-	start=htmltext.find("filmicerik")
 
-	if start == -1:
-		return ''
+	searcharea = htmltext[start:]
 
-	end=htmltext.find('id="report_as"', start)
-	if end != -1:
-		searcharea = htmltext[start:end]
-	else:
-		searcharea = htmltext[start:]
-
-	if searcharea.find("replaceWith('\\x")!=-1:
-		start = searcharea.find("replaceWith('\\x")
+	if searcharea.find("document.write(unescape(")!=-1:
+		start = searcharea.find("document.write(unescape(")
 		end = searcharea[start:].find("')")
-		encframe = searcharea[start+13:start+end]
-		decframe = encframe.decode("string-escape")
+		encframe = searcharea[start+24:start+end]
+		decframe = urllib.unquote(encframe)
+		frame=decframe
+	elif searcharea.find("eval(unescape('") != -1:
+		start = searcharea.find("eval(unescape('")
+		end = searcharea[start:].find("')")
+		encframe = searcharea[start+15:start+end]
+		decframe = urllib.unquote(encframe)
 		frame=decframe
 	else:
 		frame=searcharea
 
+	frame=frame.replace('\n', ' ').replace('\r', ' ')
 	stream=serbiaplussearchurl(frame)
-
-	if stream == '':
-		nextpage=re.compile('iframe.+?src="(.+?)"').findall(frame)
-		if nextpage!=[]:
-			frame=readurl(nextpage[0])
-			stream = serbiaplussearchurl(frame)
 
 	return stream
 
@@ -999,10 +968,11 @@ def playurl(url):
 	return True
 
 def readurl(url):
-	if url==urllib.unquote(url):
-		quoted_url=urllib.quote(url).replace('%3A', ':')
-	else:
-		quoted_url=url
+	#if url==urllib.unquote(url):
+	#	quoted_url=urllib.quote(url).replace('%3A', ':')
+	#else:
+	#	quoted_url=url
+	quoted_url=url
 	req = urllib2.Request(quoted_url)
 	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
@@ -1078,47 +1048,16 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('telekabel.com.mk', 'live_telekabelmk', '', '')
 		addDir('zulu.mk', 'live_zulumk', '', '')
 		addDir('мрт play', 'list_mrtlive', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
-		addDir('serbiaplus (broken)', 'serbiaplus_front', '', 'http://www.serbiaplus.com/wp-content/uploads/2014/06/WEBLOGO.png')
+		addDir('serbiaplus (beta)', 'serbiaplus_front', '', '')
 		addDir('volim.tv', 'volimtv_front', '', 'http://www.volim.tv/images/banners/logo.png')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'serbiaplus_front':
-		addDir('NEW ADDITIONS', 'serbiaplus_newadditions', '', '')
-		addDir('MOST VIEWED', 'serbiaplus_mostviewed', '', '')
-		addDir('', 'break', '', '')
-
-		listing = listSerbiaPlusCategories()
+		listing = listSerbiaPlusTVs()
 		for url, title in listing:
-			title=title.replace('&#8211;', '-')
-			title=title.replace('&amp;', '&')
-			addDir(title, 'serbiaplus_stations', url, '')
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page=='serbiaplus_stations' or page =='serbiaplus_newadditions' or page=='serbiaplus_mostviewed':
-		if page=='serbiaplus_stations':
-			listing = listSerbiaPlusTVs(url)
-		elif page=='serbiaplus_newadditions':
-			listing = listSerbiaPlusTVs('http://www.serbiaplus.com/')
-		elif page=='serbiaplus_mostviewed':
-			listing = listSerbiaPlusTVs('http://www.serbiaplus.com/en-cok-izlenenler/')
-		for url, thumb, title in listing[0]:
-			title=title.replace('&#8211;', '-')
-			title=title.replace('&amp;', '&')
-			title=title.replace('&#038;', '&')
-			addDir(title, 'serbiaplus_liststreams', url, thumb)
-		if listing[1] != '':
-			addDir('Next page', 'serbiaplus_stations', listing[1], '')
-		xbmc.executebuiltin("Container.SetViewMode(500)")
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'serbiaplus_liststreams':
-		listing = listSerbiaPlusStreams(url)
-		for url, streamname in listing:
-			addLink(name+'  '+streamname.replace(' ', '').replace('.....', ''), url, 'playserbiaplus_stream', '')
+			addLink(title, url, 'playserbiaplus_stream', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
