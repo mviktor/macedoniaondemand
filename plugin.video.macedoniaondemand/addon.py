@@ -790,14 +790,18 @@ def playSerbiaPlusStream(url):
 		return False
 
 def serbiaplussearchurl(intext):
-	if intext.find("file: \"") != -1:
-		stream=re.compile('file: "(.+?)"').findall(intext)
+	if intext.find("file: \"") != -1 or intext.find("file:\"") != -1:
+		stream=re.compile('file:.*?"(.+?)"').findall(intext)
 	elif intext.find("\"file\"") != -1:
 		stream=re.compile(', *?"file":"(.+?)"').findall(intext)
 	elif intext.find("'file':") != -1:
 		stream=re.compile("'file' *?: *?'(.+?)'").findall(intext)
-	elif intext.find("application/x-vlc-plugin") != -1:
+	elif intext.find("application/x-vlc-plugin") != -1 or intext.find("application/x-google-vlc-plugin") != -1:
 		stream=re.compile('target="(.+?)"').findall(intext)
+	elif intext.find("streamer=rtmp://") != -1:
+		tmp=re.compile('file=(.+?)&streamer=(.+?)&').findall(intext)
+		if tmp != []:
+			stream = [tmp[0][1]+tmp[0][0]]
 	elif intext.find('flashvars="src') != -1:
 		tmp=re.compile('flashvars="src=(.+?)"').findall(intext)
 		if tmp != []:
@@ -923,6 +927,59 @@ def playvolimtvurl(url):
 		playurl(match[0])
 	pDialog.close()
 	return True
+
+# netraja methods
+
+def listNetrajaCategories():
+	url='http://www.netraja.net'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link=response.read()
+	response.close()
+	start = link.find('TV KANALI</a>')
+	end = link.find('</ul>', start)
+	match=re.compile("<a href='(.+?)'>(.+?)</a>").findall(link[start:end])
+
+	return match
+
+def listNetrajaTvs(url):
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	match = re.compile("<h2 class='post-title entry-title' itemprop='name headline'>\n<a href='(.+?)' itemprop='url'>(.+?)</a>\n</h2>\n<meta content='(.+?)' itemprop='image'/>").findall(link)
+	return match
+
+def playNetrajaStream(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('Netraja', 'Initializing')
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(50, 'Finding stream')
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	start = link.find("<div class='post-body entry-content'")
+	end = link.find("<div style='clear: both;'></div>", start)
+
+	stream=serbiaplussearchurl(link[start:end])
+
+	if stream == '':
+		if link[start:end].find("www.youtube.com/embed/") != -1:
+			match=re.compile('www.youtube.com/embed/(.+?)"').findall(link[start:end])
+			if match != []:
+				stream='plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+match[0]
+
+	if stream != '':
+		pDialog.update(80, 'Playing')
+		playurl(stream)
+		pDialog.close()
+		return True
+
+	pDialog.close()
+	return False
 
 # general methods
 
@@ -1050,6 +1107,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('мрт play', 'list_mrtlive', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
 		addDir('serbiaplus (beta)', 'serbiaplus_front', '', '')
 		addDir('volim.tv', 'volimtv_front', '', 'http://www.volim.tv/images/banners/logo.png')
+		addDir('netraja.net (beta)', 'netraja_front', '', 'http://3.bp.blogspot.com/-_z6ksp3rY6Q/U0HL30rMwaI/AAAAAAAADAs/_hSEFNwNZ_8/s1600/7.png')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
@@ -1078,6 +1136,24 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'playvolimtv':
 		playvolimtvurl(url)
+
+	elif page == 'netraja_front':
+		listing = listNetrajaCategories()
+		for url, name in listing:
+			addDir(name, 'netraja_list_tvs', url, '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'netraja_list_tvs':
+		listing = listNetrajaTvs(url)
+		for url, title, thumb in listing:
+			addLink(title, url, 'netraja_play_stream', thumb)
+		xbmc.executebuiltin("Container.SetViewMode(500)")
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'netraja_play_stream':
+		playNetrajaStream(url)
 
 	elif page == 'live_zulumk':
 		listing = createZuluListing()
