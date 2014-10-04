@@ -1,3 +1,6 @@
+v1.4.13
+   - [zulu] Play high resolution streams
+
 v1.4.12
    - [netraja] initial support
 

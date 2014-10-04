@@ -146,7 +146,7 @@ def playZuluStream(url):
 	response.close()
 	streammatch=re.compile('<video .+? src="(.+?)"').findall(link)
 	pDialog.update(80, 'Playing')
-	playurl(streammatch[0])
+	playurl(streammatch[0].replace('_2/', '_1/'))
 
 	return True
 
