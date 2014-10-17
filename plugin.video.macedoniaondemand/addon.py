@@ -746,32 +746,27 @@ def listTelmaSeries():
 # serbiaplus methods
 
 def listSerbiaPlusTVs():
-	req = urllib2.Request('http://serbiaplus.atspace.tv')
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	match=re.compile('<a href="(.+?)".+?target="_blank"><div class="wpmd">\n<div align=center><font face=".+?" class="ws12">(.+?)</font></div>').findall(link)
-	return match
+	htmltext = readurl('http://www.serbiaplus.com')
+	match=re.compile('<frame src="(.+?)" ').findall(htmltext)
+	if match == []:
+		return [[],[]]
+	try:
+		newurl = match[0]
+		htmltext = readurl(newurl)
+		match = re.compile('<iframe name="iFrame1" .+? src="(.+?)"').findall(htmltext)
+		link = readurl(newurl+match[0])
+		match=re.compile('<a href="(.+?)".+?target="_blank"><div class="wpmd">\n<div align=center><font face=".+?" class="ws12">(.+?)</font></div>').findall(link)
+		return [newurl, match]
+	except:
+		return [[],[]]
 
 def playSerbiaPlusStream(url):
 	pDialog = xbmcgui.DialogProgress()
 	pDialog.create('Serbia Plus', 'Initializing')
 
-	req = urllib2.Request('http://serbiaplus.atspace.tv/'+url)
+	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
 	pDialog.update(40, 'Finding stream')
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-
-	matchframe=re.compile('<iframe name="iFrame1" .+?src="(.+?)" ').findall(link)
-	if matchframe==[]:
-		pDialog.close()
-		return False
-	req = urllib2.Request('http://serbiaplus.atspace.tv'+matchframe[0])
-	req.add_header('User-Agent', user_agent)
-	pDialog.update(80, 'Finding stream')
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
@@ -790,6 +785,7 @@ def playSerbiaPlusStream(url):
 		return False
 
 def serbiaplussearchurl(intext):
+	stream = []
 	if intext.find("file: \"") != -1 or intext.find("file:\"") != -1:
 		stream=re.compile('file:.*?"(.+?)"').findall(intext)
 	elif intext.find("\"file\"") != -1:
@@ -816,26 +812,44 @@ def serbiaplussearchurl(intext):
 	else:
 		return ''
 
+def decode_serbiaplus_frame(s, splitconst, appendconst, offsetconst):
+	r = ""
+	tmp = s.split(splitconst)
+	s = urllib.unquote(tmp[0])
+	k = urllib.unquote(tmp[1]+appendconst)
+
+	for i in range(0, len(s)):
+		r = r + chr((int(k[i%len(k)]) ^ ord(s[i])) + offsetconst)
+
+	return r
+
 def findSerbiaPlusStream(htmltext):
 	start = 0
 	end = -1
 
 	searcharea = htmltext[start:]
 
-	if searcharea.find("document.write(unescape(")!=-1:
-		start = searcharea.find("document.write(unescape(")
-		end = searcharea[start:].find("')")
-		encframe = searcharea[start+24:start+end]
-		decframe = urllib.unquote(encframe)
-		frame=decframe
-	elif searcharea.find("eval(unescape('") != -1:
-		start = searcharea.find("eval(unescape('")
-		end = searcharea[start:].find("')")
-		encframe = searcharea[start+15:start+end]
+	if searcharea.find("unescape('")!=-1:
+		start = searcharea.find("unescape('")
+		end = searcharea.find("')", start)
+		encframe = searcharea[start+10:end]
 		decframe = urllib.unquote(encframe)
 		frame=decframe
 	else:
 		frame=searcharea
+
+	if frame.__contains__('split("') and frame.__contains__("charCodeAt"):
+		splitmatch = re.compile('split\("(.+?)"\);').findall(frame)
+		appendmatch = re.compile('tmp\[1\].*?"(.+?)"').findall(frame)
+		offsetmatch = re.compile('charCodeAt\(i\)\)\+(.+?)\)').findall(frame)
+
+		payloadstart = searcharea.find("eval(unescape('")
+		payloadstart = searcharea.find("unescape('", payloadstart+16)
+		payloadstart = searcharea.find("'", payloadstart+11)
+		payloadstart = searcharea.find("'", payloadstart+2)
+		payloadend = searcharea.find("'", payloadstart+1)
+		decframe = decode_serbiaplus_frame(searcharea[payloadstart+1:payloadend], splitmatch[0], appendmatch[0], int(offsetmatch[0]))
+		frame = decframe
 
 	frame=frame.replace('\n', ' ').replace('\r', ' ')
 	stream=serbiaplussearchurl(frame)
@@ -981,6 +995,36 @@ def playNetrajaStream(url):
 	pDialog.close()
 	return False
 
+# rts methods
+
+def playrtsvideo(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('RTS', 'Initializing')
+	req = urllib2.Request('http://www.rts.rs'+url)
+	req.add_header('User-Agent', user_agent)
+	pDialog.update(50, 'Finding stream')
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	match = re.compile('<param name="movie" value="(.+?)"></param>').findall(link)
+	if match == []:
+		pDialog.close()
+		return False
+
+	videolinkstart = match[0].find('youtube.com')
+
+	if match[0].__contains__('youtube.com'):
+		stream = 'plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+match[0].split('/')[-1].split('?')[0]
+
+	if stream != '':
+		pDialog.update(80, 'Playing')
+		playurl(stream)
+		pDialog.close()
+		return True
+
+	pDialog.close()
+	return False
+
 # general methods
 
 def sendto_ga(page,url='',name=''):
@@ -1114,8 +1158,8 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'serbiaplus_front':
 		listing = listSerbiaPlusTVs()
-		for url, title in listing:
-			addLink(title, url, 'playserbiaplus_stream', '')
+		for url, title in listing[1]:
+			addLink(title, listing[0]+url, 'playserbiaplus_stream', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -1502,18 +1546,25 @@ def PROCESS_PAGE(page,url='',name=''):
 				title=re.compile('title="(.+?)"').findall(content, start)
 				uptitle=re.compile('<p class="uptitle">.*?\n(.+?)\n').findall(content, start)
 				startfiles=content.find('<div class="files">', start)
+				videopage=re.compile('<h2><a href="(.+?)">').findall(content, start)
 
 				if next != -1:
 					files=re.compile('<a href="(.+?)"').findall(content, startfiles, next)
 				else:
 					files=re.compile('<a href="(.+?)"').findall(content, startfiles)
+
 				if title != [] and uptitle != [] and files != [] and thumb != []:
 					addLink(title[0].strip()+' - '+uptitle[0].strip().replace('&nbsp;', ' '), 'http://www.rts.rs'+files[1], '', 'http://www.rts.rs'+thumb[0], art)
+				else:
+					addLink(title[0].strip()+' - '+uptitle[0].strip().replace('&nbsp;', ' '), videopage[0], 'rts_play_video', 'http://www.rts.rs'+thumb[0], art)
 
 				start=start+16
 
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'rts_play_video':
+		playrtsvideo(url)
 
 
 def addLink(name,url,page,iconimage,fanart='',duration='00:00', published='0000-00-00', description=''):
