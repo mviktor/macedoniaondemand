@@ -754,6 +754,8 @@ def listSerbiaPlusTVs():
 		newurl = match[0]
 		htmltext = readurl(newurl)
 		match = re.compile('<iframe name="iFrame1" .+? src="(.+?)"').findall(htmltext)
+		if newurl[-1] != '/':
+			newurl += '/'
 		link = readurl(newurl+match[0])
 		match=re.compile('<a href="(.+?)".+?target="_blank"><div class="wpmd">\n<div align=center><font face=".+?" class="ws12">(.+?)</font></div>').findall(link)
 		return [newurl, match]
