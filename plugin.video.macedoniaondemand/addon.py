@@ -6,7 +6,7 @@
 	Author: Viktor Mladenovski
 """
 
-import urllib,urllib2,re,xbmcplugin,xbmcaddon,xbmcgui,HTMLParser
+import urllib,urllib2,re,xbmcplugin,xbmcaddon,xbmcgui,HTMLParser,json
 import sys,os,os.path
 
 user_agent = 'Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:11.0) Gecko/20100101 Firefox/11.0'
@@ -960,13 +960,19 @@ def listNetrajaCategories():
 	return match
 
 def listNetrajaTvs(url):
+	category = url.split('/')[-1]
+	url = 'http://www.netraja.net/feeds/posts/summary/-/'+category+'?start-index=1&max-results=200&alt=json'
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
-	link = response.read()
+	data = json.load(response)
 	response.close()
-	match = re.compile("<h2 class='post-title entry-title' itemprop='name headline'>\n<a href='(.+?)' itemprop='url'>(.+?)</a>\n</h2>\n<meta content='(.+?)' itemprop='image'/>").findall(link)
-	return match
+	if data.get('feed'):
+		t=data['feed']
+		if t.get('entry'):
+			return t['entry']
+
+	return {}
 
 def playNetrajaStream(url):
 	pDialog = xbmcgui.DialogProgress()
@@ -1192,8 +1198,8 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'netraja_list_tvs':
 		listing = listNetrajaTvs(url)
-		for url, title, thumb in listing:
-			addLink(title, url, 'netraja_play_stream', thumb)
+		for item in listing:
+			addLink(item['link'][-1]['title'].encode('ascii', 'ignore'), item['link'][-1]['href'], 'netraja_play_stream', item.values()[7].values()[0] )
 		xbmc.executebuiltin("Container.SetViewMode(500)")
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
