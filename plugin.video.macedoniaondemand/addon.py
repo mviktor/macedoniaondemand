@@ -1543,6 +1543,8 @@ def PROCESS_PAGE(page,url='',name=''):
 			image=re.compile('src=&#034;(.+?)&#034;').findall(metadata[0])
 			if image != []:
 				art=image[0]
+				if art[0] == '/':
+					art='http://www.rts.rs'+art
 
 			start=0
 			while True:
@@ -1553,13 +1555,15 @@ def PROCESS_PAGE(page,url='',name=''):
 				thumb=re.compile('<img src="(.+?)"').findall(content, start)
 				title=re.compile('title="(.+?)"').findall(content, start)
 				uptitle=re.compile('<p class="uptitle">.*?\n(.+?)\n').findall(content, start)
-				startfiles=content.find('<div class="files">', start)
+				startfiles=content.find('<div class="files">', start, next)
 				videopage=re.compile('<h2><a href="(.+?)">').findall(content, start)
+				files = []
 
-				if next != -1:
-					files=re.compile('<a href="(.+?)"').findall(content, startfiles, next)
-				else:
-					files=re.compile('<a href="(.+?)"').findall(content, startfiles)
+				if startfiles != -1:
+					if next != -1:
+						files=re.compile('<a href="(.+?)"').findall(content, startfiles, next)
+					else:
+						files=re.compile('<a href="(.+?)"').findall(content, startfiles)
 
 				if title != [] and uptitle != [] and files != [] and thumb != []:
 					addLink(title[0].strip()+' - '+uptitle[0].strip().replace('&nbsp;', ' '), 'http://www.rts.rs'+files[1], '', 'http://www.rts.rs'+thumb[0], art)
