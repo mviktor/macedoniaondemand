@@ -1,3 +1,8 @@
+v1.4.15
+   - [rts] play youtube and direct links
+   - [netraja] list all tv stations
+   - [serbiaplus] check for trailing '/' before appending urls
+
 v1.4.14
    - [rts] support for youtube links
    - [serbiaplus] small fix for some of the channels
