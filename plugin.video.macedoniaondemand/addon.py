@@ -484,7 +484,15 @@ def list_mrtchannel(url):
 	for type,url,thumb,duration,title in match:
 		list.append([type,url,thumb,str(duration_in_minutes(duration)),title])
 
-	return list
+	nextpage=''
+	nextpagestart = link.find('class="next"')
+	if nextpagestart != -1:
+		nextpageend = link.find('</div>', nextpagestart)
+		nextpagematch = re.compile("url:'(.+?)'").findall(link, nextpagestart, nextpageend)
+		if nextpagematch != []:
+			nextpage = nextpagematch[0]
+
+	return [list, nextpage]
 
 def list_mrtlive():
 	url = 'http://play.mrt.com.mk/'
@@ -1354,12 +1362,17 @@ def PROCESS_PAGE(page,url='',name=''):
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'list_mrtchannel':
-		listing = list_mrtchannel(url)
+		[listing, nextpage] = list_mrtchannel(url)
+
 		for type,url,thumb,duration,title in listing:
 			if type=="video":
 				addLink(title, url, 'play_mrt_video', thumb, '', duration)
 			elif type=="channel":
 				addDir(">>  "+title, 'list_mrtchannel', url, thumb)
+
+		if nextpage != '':
+			addDir(">> Следна Страна", 'list_mrtchannel', nextpage.replace('&amp;', '&'), '')
+
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
