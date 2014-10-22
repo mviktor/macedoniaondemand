@@ -161,7 +161,7 @@ def createTelekabelListing():
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	match=re.compile('<li class="level2 item.+?"><a href=\"(.+?)\" class="level2"><span>(.+?)</span></a></li>').findall(link)
+	match=re.compile('<li class="level2.+?"><a href=\"(.+?)\".+?<span>(.+?)</span></a></li>').findall(link)
 	return match
 
 
@@ -1235,6 +1235,8 @@ def PROCESS_PAGE(page,url='',name=''):
 		for u, streamname in listing:
 			if not u.startswith('mms'):
 				addLink(streamname, u, 'playtelekabelstream', '')
+			else:
+				addLink('Радио '+streamname, u, '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
