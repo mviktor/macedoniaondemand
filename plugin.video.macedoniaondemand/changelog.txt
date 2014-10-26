@@ -1,3 +1,9 @@
+v1.4.16
+   - [hrt] list current 'current' show (dnevnik) in initial list
+   - [telekabel] support for radio channels
+   - [mrtplay] support for older episodes
+   - [netraja] play youtube links.
+
 v1.4.15
    - [rts] play youtube and direct links
    - [netraja] list all tv stations
