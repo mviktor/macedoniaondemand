@@ -1,3 +1,6 @@
+v1.4.17
+   - [prvatv] Prva Srpska TV - initial support
+
 v1.4.16
    - [hrt] list current 'current' show (dnevnik) in initial list
    - [telekabel] support for radio channels

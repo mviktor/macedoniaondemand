@@ -715,7 +715,6 @@ def playTelmaVideo(shorturl):
 	response.close()
 	match=re.compile('<div class="mediaelement-video"><video.+?src="(.+?)" class="mediaelement-formatter').findall(link)
 	pDialog.update(90, 'Playing')
-	print "telma match="+match[0]
 	playurl(match[0])
 	pDialog.close()
 
@@ -1042,6 +1041,91 @@ def playrtsvideo(url):
 	pDialog.close()
 	return False
 
+# prvatv methods
+
+def listPrvaTvCategories():
+	url = 'http://www.prva.rs/web-tv.html'
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	link = link.replace('\n', '').replace('\r', '').replace('<span class=" ">', '').replace('</span>', '')
+
+	start = link.find('<div class="horizontalSubNavigation fix">')
+	end = link.find('</div>', start)
+
+	match = re.compile('<a href="(.+?)".+?>(.+?)</a>').findall(link[start:end])
+	return match
+
+def listPrvaTvSeries_old(url):
+	req = urllib2.Request('http://www.prva.rs'+url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	link = link.replace('\n', '').replace('\r', '').replace('<span class=" ">', '').replace('</span>', '')
+
+	start = link.find('<li class="   depth3 first">')
+	if start == -1:
+		start = link.find('div id="topFullDepth3"')
+
+	end = link.find('</div>', start)
+
+	match = re.compile('<a href="(.+?)".+?>(.+?)</a>').findall(link[start:end])
+	return match
+
+def listPrvaTvSeries(url):
+	req = urllib2.Request('http://www.prva.rs'+url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	link = link.replace('\n', '').replace('\r', '').replace('<span class=" ">', '').replace('</span>', '')
+
+	start = link.find('div class="primary-content"')
+
+	match = re.compile('<div class="children-box hero-item red">.+?<img src="(.+?)".+?>.+?<h3><a href="(.+?)">(.+?)</a>').findall(link[start:])
+	return match
+
+def listPrvaTvEpisodes(url):
+	req = urllib2.Request('http://www.prva.rs'+url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+	link = link.replace('\n', '').replace('\r', '').replace('<span class=" ">', '').replace('</span>', '')
+
+	start = link.find('class="mediaTitle"')
+
+	match = re.compile('<a class="mediumThumb fix" href="(.+?)" title="(.+?)">.+?<img src="(.+?)"').findall(link[start:])
+	return match
+
+def prvatv_playvideo(url):
+	req = urllib2.Request('http://www.prva.rs'+url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+
+	start = link.find('class="mediaDescription"')
+
+	titlematch=re.compile("title: '(.+?)'").findall(link[start:])
+	videourlmatch=re.compile('src: "(.+?)"').findall(link[start:])
+
+	if titlematch != []:
+		name = titlematch[0]
+
+	if videourlmatch == []:
+		return False
+
+	videourl=videourlmatch[0]
+	if videourl[0] == '/':
+		videourl='http://www.prva.rs'+videourl
+
+	playurl(videourl)
+	return True
+
 # general methods
 
 def sendto_ga(page,url='',name=''):
@@ -1151,6 +1235,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		stations.append(["Телма", "telma_front", ''])
 		stations.append(["HRT", "hrt_front", ''])
 		stations.append(["РТС", "rts_front", ''])
+		stations.append(["Prva Srpska TV", "prvatv_front", ''])
 
 		stations.append(["", "break", ''])
 		stations.append(["Гледај во живо", "live_front", ''])
@@ -1594,6 +1679,35 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'rts_play_video':
 		playrtsvideo(url)
 
+	elif page == 'prvatv_front':
+		categories = listPrvaTvCategories()
+		for url, name in categories:
+			addDir(name.strip(), 'prvatv_listseries', url, '')
+
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'prvatv_listseries':
+		series = listPrvaTvSeries(url)
+		for thumb, url, name in series:
+			if thumb[0] == '/':
+				thumb='http://www.prva.rs'+thumb
+			addDir(name.strip(), 'prvatv_listepisodes', url, thumb)
+
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'prvatv_listepisodes':
+		episodes = listPrvaTvEpisodes(url)
+		for url, name, thumb in episodes:
+			addLink(name.strip(), url, 'prvatv_playvideo', 'http://www.prva.rs'+thumb.replace(' ', '%20'))
+
+		xbmc.executebuiltin("Container.SetViewMode(500)")
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'prvatv_playvideo':
+		prvatv_playvideo(url)
 
 def addLink(name,url,page,iconimage,fanart='',duration='00:00', published='0000-00-00', description=''):
         ok=True
