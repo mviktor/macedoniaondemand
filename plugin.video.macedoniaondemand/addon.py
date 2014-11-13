@@ -755,19 +755,18 @@ def listTelmaSeries():
 def listSerbiaPlusTVs():
 	htmltext = readurl('http://www.serbiaplus.com')
 	match=re.compile('<frame src="(.+?)" ').findall(htmltext)
-	if match == []:
-		return [[],[]]
-	try:
+	if match != []:
 		newurl = match[0]
 		htmltext = readurl(newurl)
-		match = re.compile('<iframe name="iFrame1" .+? src="(.+?)"').findall(htmltext)
-		if newurl[-1] != '/':
-			newurl += '/'
-		link = readurl(newurl+match[0])
-		match=re.compile('<a href="(.+?)".+?target="_blank"><div class="wpmd">\n<div align=center><font face=".+?" class="ws12">(.+?)</font></div>').findall(link)
-		return [newurl, match]
-	except:
-		return [[],[]]
+	else:
+		newurl='http://www.serbiaplus.com'
+
+	match = re.compile('<iframe name="iFrame1" .+? src="(.+?)"').findall(htmltext)
+	if newurl[-1] != '/':
+		newurl += '/'
+	link = readurl(newurl+match[0])
+	match=re.compile('<a href="(.+?)".+?target="_blank"><div class="wpmd">\n<div align=center><font face=".+?" class="ws12">(.+?)</font></div>').findall(link)
+	return [newurl, match]
 
 def playSerbiaPlusStream(url):
 	pDialog = xbmcgui.DialogProgress()
@@ -780,7 +779,9 @@ def playSerbiaPlusStream(url):
 	link=response.read()
 	response.close()
 
-	stream=findSerbiaPlusStream(link)
+	stream = serbiaplussearchurl(link)
+	if stream == '':
+		stream=findSerbiaPlusStream(link)
 
 	if stream != '':
 		if stream.__contains__('youtube.com'):
@@ -802,7 +803,16 @@ def serbiaplussearchurl(intext):
 	elif intext.find("'file':") != -1:
 		stream=re.compile("'file' *?: *?'(.+?)'").findall(intext)
 	elif intext.find("application/x-vlc-plugin") != -1 or intext.find("application/x-google-vlc-plugin") != -1:
-		stream=re.compile('target="(.+?)"').findall(intext)
+		start = intext.find("application/x-vlc-plugin")
+		if start == -1:
+			start = intext.find("application/x-google-vlc-plugin")
+
+		if start > 200:
+			start -= 200
+		else:
+			start = 0
+
+		stream=re.compile('target="(.+?)"').findall(intext, start)
 	elif intext.find("streamer=rtmp://") != -1:
 		tmp=re.compile('file=(.+?)&streamer=(.+?)&').findall(intext)
 		if tmp != []:
@@ -1261,7 +1271,7 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'serbiaplus_front':
 		listing = listSerbiaPlusTVs()
 		for url, title in listing[1]:
-			addLink(title, listing[0]+url, 'playserbiaplus_stream', '')
+			addLink(title.replace('&nbsp;', ''), listing[0]+url, 'playserbiaplus_stream', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
