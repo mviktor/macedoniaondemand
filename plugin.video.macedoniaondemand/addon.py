@@ -1111,10 +1111,49 @@ def listPrvaTvEpisodes(url):
 	match = re.compile('<a class="mediumThumb fix" href="(.+?)" title="(.+?)">.+?<img src="(.+?)"').findall(link[start:])
 	return match
 
-def prvatv_playvideo(url):
-	req = urllib2.Request('http://www.prva.rs'+url)
+def listPrvaTvMode2frontvideos(baseurl):
+	req = urllib2.Request(baseurl)
 	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+
+	link = link.replace('\n', '').replace('\r', '')
+	match = re.compile('<a class="largeThumb fix" href="(.+?)" title="(.+?)">.+?<img src="(.+?)"').findall(link)
+
+	start = link.find('<li class="centralLi">')
+	end = link.find('</ul>', start)
+	activestart = link.find('<li class="active">', start)
+
+	nextpagematch = re.compile('<a href="(.+?)">').findall(link, activestart, end)
+	nextpage = ''
+	if nextpagematch != []:
+		nextpage = nextpagematch[0]
+
+	return [match, nextpage]
+
+def listPrvaTvMode2videos(url):
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.close()
+
+	link = link.replace('\n', '').replace('\r', '')
+	start = link.find('<div class="mediaListVideo1">')
+	if start == -1:
+		start = 0;
+	match = re.compile('<div class="mediaHolder ajaxMediaElements">.+?<a class=".*?" href="(.+?)" title="(.+?)" rel=".+?" name=".+?">.+?<div class="centerHVGalleryML">.+?<img src="(.+?)"').findall(link, start)
+
+	return match
+
+def prvatv_playvideo(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('PrvaTv', 'Initializing')
+	req = urllib2.Request(url)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	pDialog.update(50, 'Fetching video stream')
 	link = response.read()
 	response.close()
 
@@ -1131,9 +1170,11 @@ def prvatv_playvideo(url):
 
 	videourl=videourlmatch[0]
 	if videourl[0] == '/':
-		videourl='http://www.prva.rs'+videourl
+		videourl='http://'+url.split('/')[2]+videourl
 
+	pDialog.update(80, 'Playing')
 	playurl(videourl)
+	pDialog.close()
 	return True
 
 # general methods
@@ -1694,6 +1735,9 @@ def PROCESS_PAGE(page,url='',name=''):
 		for url, name in categories:
 			addDir(name.strip(), 'prvatv_listseries', url, '')
 
+		addDir('Tvoje Lice Zvuci Poznato', 'prvatv_mode2_front', 'http://tlzp.prva.rs/video.html',  'http://www.prva.rs/sw4i/thumbnail/tlzp.prva.rs.jpg?thumbId=399640&fileSize=82820&lastModified=1413815770000&contentType=image/jpeg')
+		addDir('Ples sa zvezdama', 'prvatv_mode2_front', 'http://plessazvezdama.prva.rs/video.html', 'http://www.prva.rs/sw4i/thumbnail/ples.jpg?thumbId=275072&fileSize=102847&lastModified=1396024641000&contentType=image/jpeg')
+
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -1702,7 +1746,11 @@ def PROCESS_PAGE(page,url='',name=''):
 		for thumb, url, name in series:
 			if thumb[0] == '/':
 				thumb='http://www.prva.rs'+thumb
-			addDir(name.strip(), 'prvatv_listepisodes', url, thumb)
+			if name.strip()[0:5] == 'Tvoje' or name.strip()[0:4] == "Ples":
+				continue
+
+			else:
+				addDir(name.strip(), 'prvatv_listepisodes', url, thumb)
 
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
@@ -1710,9 +1758,31 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'prvatv_listepisodes':
 		episodes = listPrvaTvEpisodes(url)
 		for url, name, thumb in episodes:
-			addLink(name.strip(), url, 'prvatv_playvideo', 'http://www.prva.rs'+thumb.replace(' ', '%20'))
+			addLink(name.strip(), 'http://www.prva.rs'+url, 'prvatv_playvideo', 'http://www.prva.rs'+thumb.replace(' ', '%20'))
 
 		xbmc.executebuiltin("Container.SetViewMode(500)")
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'prvatv_mode2_front':
+		baseurl = 'http://'+url.split('/')[2]
+		listing = listPrvaTvMode2frontvideos(url)
+		for nexturl, title, thumb in listing[0]:
+			addDir('>> '+title, 'prvatv_list_mode2_videos', baseurl+nexturl, baseurl+thumb)
+
+		if listing[1] != '':
+			addDir('>> Next Page', 'prvatv_mode2_front', baseurl+listing[1], '')
+
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'prvatv_list_mode2_videos':
+		baseurl='http://'+url.split('/')[2]
+		listing = listPrvaTvMode2videos(url)
+
+		for nexturl, title, thumb in listing:
+			addLink(title, baseurl+nexturl, 'prvatv_playvideo', baseurl+thumb)
+
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 

@@ -1,3 +1,6 @@
+v1.4.19
+   - [prvatv] Tvoje Lice Zvuci Poznato & Ples Sa Zvezdama
+
 v1.4.18
    - [serbiaplus] serbiaplus update
 
