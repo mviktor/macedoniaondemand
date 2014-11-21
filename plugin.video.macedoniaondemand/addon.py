@@ -531,6 +531,15 @@ def playmrtvideo(url):
 		pDialog.update(70, 'Playing')
 		playurl(stream)
 		pDialog.close()
+	elif match2 != []:
+		stream=match2[0]
+		if title != []:
+			videotitle = title[0]
+		else:
+			videotitle = 'MRT Video'
+		pDialog.update(70, 'Playing')
+		playurl(stream)
+		pDialog.close()
 
 	return True
 
