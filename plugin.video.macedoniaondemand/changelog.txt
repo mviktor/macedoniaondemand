@@ -1,3 +1,8 @@
+v1.4.21
+   - [telma] remove one category.
+   - [zulu] play low quality streams by default (due to buffering)
+   - [rts] fix for youtube links.
+
 v1.4.20
    - [mrtplay] Fix for MRT play.
 
