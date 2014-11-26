@@ -749,17 +749,6 @@ def listTelmaVideos(shorturl):
 		nextpage = nextpagematch[0]
 	return [match, nextpage]
 
-def listTelmaSeries():
-	url = 'http://telma.com.mk/emisii'
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	link = link.replace('\n', ' ').replace('\r', ' ')
-	match=re.compile('<div class="views-field views-field-field-slika-statija">.+?<img.+?src="(.+?)".+?<span class="field-content"><a href="(.+?)">(.+?)</a>.+?<span class="date-display-single".+?>(.+?)</span>').findall(link)
-	return match
-
 # serbiaplus methods
 
 def listSerbiaPlusTVs():
@@ -1640,7 +1629,6 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'telma_front':
 		addLink('Вести во 18:30', '', 'play_telma_vesti', '')
 		addDir('Видео', 'list_telma_videos', '', '')
-		addDir('Емисии', 'list_telma_series', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
@@ -1653,13 +1641,6 @@ def PROCESS_PAGE(page,url='',name=''):
 			addLink(Title+' '+PostDate, Video, '', '')
 		if listing[1] != '':
 			addDir('Следна Страна >', 'list_telma_videos', listing[1], '')
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'list_telma_series':
-		listing = listTelmaSeries()
-		for thumb, url, name, releasedate in listing:
-			addLink(name+" - "+releasedate,url,'play_telma_video',thumb)
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
