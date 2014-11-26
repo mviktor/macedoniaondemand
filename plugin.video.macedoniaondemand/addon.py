@@ -1046,9 +1046,8 @@ def playrtsvideo(url):
 		pDialog.close()
 		return False
 
-	videolinkstart = match[0].find('youtube.com')
-
-	if match[0].__contains__('youtube.com'):
+	stream = ''
+	if match[0].__contains__('youtube'):
 		stream = 'plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+match[0].split('/')[-1].split('?')[0]
 
 	if stream != '':
