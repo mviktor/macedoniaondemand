@@ -1027,14 +1027,19 @@ def playrtsvideo(url):
 	pDialog.create('RTS', 'Initializing')
 	req = urllib2.Request('http://www.rts.rs'+url)
 	req.add_header('User-Agent', user_agent)
-	pDialog.update(50, 'Finding stream')
+	pDialog.update(30, 'Finding stream')
 	response = urllib2.urlopen(req)
 	link = response.read()
 	response.close()
-	match = re.compile('<param name="movie" value="(.+?)"></param>').findall(link)
-	if match == []:
+	box = re.compile('<div class=\'boxFull\'>.*?<box box-left (.+?) box>').findall(link)
+	if box == []:
 		pDialog.close()
 		return False
+
+	url = 'http://www.rts.rs/boxes/boxBox.jsp?boxId='+box[0]
+	content = readurl(url)
+	pDialog.update(60, 'Finding stream')
+	match = re.compile('src="(.+?")').findall(content)
 
 	stream = ''
 	if match[0].__contains__('youtube'):
@@ -1660,13 +1665,14 @@ def PROCESS_PAGE(page,url='',name=''):
 		content=readurl('http://www.rts.rs/page/podcast/ci.html')
 		start=0
 		while True:
-			start=content.find('<h1>', start)
+			start=content.find('class="section"', start)
 			if start != -1:
-				delim=content.find('</h1>', start)
-				station=content[start+4:delim]
-				next=content.find('<h1>', start+4)
+				delimstart=content.find('<h2>', start)
+				delimend=content.find('</h2>', start)
+				station=content[delimstart+4:delimend]
+				next=content.find('class="section"', start+20)
 				if next==-1:
-					next=content.find('<div id="right">', start+4)
+					next=content.find('<div class="comment">', start+4)
 				match=re.compile('<a href="(.+?)".*?>(.+?)</a>').findall(content[start:next])
 				for url, title in match:
 					addDir(station+"   "+title, 'list_rts_episodes', url, '')
@@ -1690,15 +1696,18 @@ def PROCESS_PAGE(page,url='',name=''):
 
 			start=0
 			while True:
-				start = content.find('<tr class="first"', start)
+				start = content.find('<div class="element ', start)
 				if start == -1:
 					break;
-				next = content.find('<tr class="first"', start+16)
-				thumb=re.compile('<img src="(.+?)"').findall(content, start)
-				title=re.compile('title="(.+?)"').findall(content, start)
-				uptitle=re.compile('<p class="uptitle">.*?\n(.+?)\n').findall(content, start)
+				next = content.find('<div class="element "', start+20)
+				if next == -1:
+					next = len(content)
+
+				thumb=re.compile('<img class="img-responsive" src="(.+?)"').findall(content, start, next)
+				title=re.compile('title="(.+?)"').findall(content, start, next)
+				uptitle=re.compile('<p class="lead">(.+?)</p>').findall(content, start, next)
 				startfiles=content.find('<div class="files">', start, next)
-				videopage=re.compile('<h2><a href="(.+?)">').findall(content, start)
+				videopage=re.compile('<h3><a href="(.+?)">').findall(content, start, next)
 				files = []
 
 				if startfiles != -1:
@@ -1707,10 +1716,25 @@ def PROCESS_PAGE(page,url='',name=''):
 					else:
 						files=re.compile('<a href="(.+?)"').findall(content, startfiles)
 
-				if title != [] and uptitle != [] and files != [] and thumb != []:
-					addLink(title[0].strip()+' - '+uptitle[0].strip().replace('&nbsp;', ' '), 'http://www.rts.rs'+files[1], '', 'http://www.rts.rs'+thumb[0], art)
+				if title != []:
+					titlestr = title[0]
 				else:
-					addLink(title[0].strip()+' - '+uptitle[0].strip().replace('&nbsp;', ' '), videopage[0], 'rts_play_video', 'http://www.rts.rs'+thumb[0], art)
+					titlestr = ""
+
+				if thumb != []:
+					thumbstr = thumb[0]
+				else:
+					thumbstr = ""
+
+				if uptitle != []:
+					uptitlestr=uptitle[0]
+				else:
+					uptitlestr=""
+
+				if files != []:
+					addLink(titlestr.strip()+' - '+uptitlestr.strip().replace('&nbsp;', ' '), 'http://www.rts.rs'+files[1], '', 'http://www.rts.rs'+thumbstr, art)
+				else:
+					addLink(titlestr.strip()+' - '+uptitlestr.strip().replace('&nbsp;', ' '), videopage[0], 'rts_play_video', 'http://www.rts.rs'+thumbstr, art)
 
 				start=start+16
 

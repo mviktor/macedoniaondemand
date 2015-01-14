@@ -1,3 +1,6 @@
+v1.4.22
+   - [rts] fix for updated site.
+
 v1.4.21
    - [telma] remove one category.
    - [zulu] play low quality streams by default (due to buffering)
