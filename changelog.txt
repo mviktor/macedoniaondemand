@@ -1,3 +1,6 @@
+v1.4.23
+   - [tvboxuzivo] initial support
+
 v1.4.22
    - [rts] fix for updated site.
 

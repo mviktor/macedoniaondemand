@@ -797,11 +797,11 @@ def serbiaplussearchurl(intext):
 	stream = []
 	if intext.find("file: \"") != -1 or intext.find("file:\"") != -1:
 		stream=re.compile('file:.*?"(.+?)"').findall(intext)
-	elif intext.find("\"file\"") != -1:
+	if intext.find("\"file\"") != -1:
 		stream=re.compile(', *?"file":"(.+?)"').findall(intext)
-	elif intext.find("'file':") != -1:
+	if intext.find("'file':") != -1:
 		stream=re.compile("'file' *?: *?'(.+?)'").findall(intext)
-	elif intext.find("application/x-vlc-plugin") != -1 or intext.find("application/x-google-vlc-plugin") != -1:
+	if intext.find("application/x-vlc-plugin") != -1 or intext.find("application/x-google-vlc-plugin") != -1:
 		start = intext.find("application/x-vlc-plugin")
 		if start == -1:
 			start = intext.find("application/x-google-vlc-plugin")
@@ -812,18 +812,16 @@ def serbiaplussearchurl(intext):
 			start = 0
 
 		stream=re.compile('target="(.+?)"').findall(intext, start)
-	elif intext.find("streamer=rtmp://") != -1:
+	if intext.find("streamer=rtmp://") != -1:
 		tmp=re.compile('file=(.+?)&streamer=(.+?)&').findall(intext)
 		if tmp != []:
 			stream = [tmp[0][1]+tmp[0][0]]
-	elif intext.find('flashvars="src') != -1:
-		tmp=re.compile('flashvars="src=(.+?)"').findall(intext)
+	if intext.find('flashvars="src') != -1 or intext.find('flashvars="streamer') != -1:
+		tmp=re.compile('flashvars=".+?=(.+?)"').findall(intext)
 		if tmp != []:
 			stream=[urllib.unquote_plus(tmp[0]).strip()]
 			stream[0]=stream[0].split(' ')[0]
-			stream[0]=stream[0].split('&#')[0]
-	else:
-		stream=[]
+			stream[0]=stream[0].split('&')[0]
 
 	if stream != []:
 		return HTMLParser.HTMLParser().unescape(stream[0])
@@ -1180,6 +1178,19 @@ def prvatv_playvideo(url):
 	pDialog.close()
 	return True
 
+# TVBOX methods
+
+def listtvboxchannels():
+	req = urllib2.Request('http://tvboxuzivo.blogspot.com')
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	link = response.read()
+	response.read()
+
+	match = re.compile("<li><a href='(.+?)'>(.+?)</a></li>").findall(link)
+
+	return match
+
 # general methods
 
 def sendto_ga(page,url='',name=''):
@@ -1222,6 +1233,22 @@ def playurl(url):
 	player = xbmc.Player(xbmc.PLAYER_CORE_AUTO)
 	player.play(play)
 	return True
+
+def playGenericChannel(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('Macedonia On Demand', 'Initializing')
+
+	pDialog.update(50, 'Finding stream')
+	content=readurl(url)
+	stream=serbiaplussearchurl(content)
+
+	if stream != '':
+		pDialog.update(80, 'Playing')
+		playurl(stream)
+		return True
+	else:
+		pDialog.close()
+		return False
 
 def readurl(url):
 	#if url==urllib.unquote(url):
@@ -1308,6 +1335,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('serbiaplus (beta)', 'serbiaplus_front', '', '')
 		addDir('volim.tv', 'volimtv_front', '', 'http://www.volim.tv/images/banners/logo.png')
 		addDir('netraja.net (beta)', 'netraja_front', '', 'http://3.bp.blogspot.com/-_z6ksp3rY6Q/U0HL30rMwaI/AAAAAAAADAs/_hSEFNwNZ_8/s1600/7.png')
+		addDir('tvboxuzivo (beta)', 'tvboxuzivo_front', '', '')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
@@ -1802,6 +1830,18 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'prvatv_playvideo':
 		prvatv_playvideo(url)
+
+	elif page == 'tvboxuzivo_front':
+		listing = listtvboxchannels()
+		for url, title in listing:
+			addLink(title, url, 'tvboxuzivo_playvideo', '')
+
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'tvboxuzivo_playvideo':
+		playGenericChannel(url)
+
 
 def addLink(name,url,page,iconimage,fanart='',duration='00:00', published='0000-00-00', description=''):
         ok=True
