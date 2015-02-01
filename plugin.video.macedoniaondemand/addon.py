@@ -1191,6 +1191,45 @@ def listtvboxchannels():
 
 	return match
 
+# NET-TV methods
+
+def listnettvchannels():
+	req = urllib2.Request('http://net-tv.wix.com/ulaz')
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	data = response.read()
+	response.close()
+
+	start = data.find('var publicModel =')
+	if start == -1:
+		return []
+
+	start = start + 17
+	end = data.find(';', start)
+	if end == -1:
+		return []
+
+	j = json.loads(data[start:end])
+	return j
+
+def nettv_playvideo(url):
+	try:
+		req = urllib2.Request(url)
+		req.add_header('User-Agent', user_agent)
+		response = urllib2.urlopen(req)
+		data = response.read()
+		response.close()
+	except:
+		return False
+
+	match = re.compile('"url":"(.+?)",').findall(data)
+	if match == []:
+		return False
+
+	streamurl = 'http://net-tv.wix.com.usrfiles.com/'+match[0]
+	return playGenericChannel(streamurl)
+
+
 # general methods
 
 def sendto_ga(page,url='',name=''):
@@ -1239,8 +1278,11 @@ def playGenericChannel(url):
 	pDialog.create('Macedonia On Demand', 'Initializing')
 
 	pDialog.update(50, 'Finding stream')
-	content=readurl(url)
-	stream=serbiaplussearchurl(content)
+	try:
+		content=readurl(url)
+		stream=serbiaplussearchurl(content)
+	except:
+		return False
 
 	if stream != '':
 		pDialog.update(80, 'Playing')
@@ -1332,10 +1374,11 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('telekabel.com.mk', 'live_telekabelmk', '', '')
 		addDir('zulu.mk', 'live_zulumk', '', '')
 		addDir('мрт play', 'list_mrtlive', '', 'http://mrt.com.mk/sites/all/themes/mrt/logo.png')
-		addDir('serbiaplus (beta)', 'serbiaplus_front', '', '')
 		addDir('volim.tv', 'volimtv_front', '', 'http://www.volim.tv/images/banners/logo.png')
+		addDir('serbiaplus (beta)', 'serbiaplus_front', '', '')
 		addDir('netraja.net (beta)', 'netraja_front', '', 'http://3.bp.blogspot.com/-_z6ksp3rY6Q/U0HL30rMwaI/AAAAAAAADAs/_hSEFNwNZ_8/s1600/7.png')
 		addDir('tvboxuzivo (beta)', 'tvboxuzivo_front', '', '')
+		addDir('net-tv (beta)', 'nettv_front', '', '')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
@@ -1842,6 +1885,17 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'tvboxuzivo_playvideo':
 		playGenericChannel(url)
 
+	elif page == 'nettv_front':
+		listing = listnettvchannels()
+		for tv in listing['pageList']['pages']:
+			addLink(tv['title'].encode('ascii', 'ignore'), tv['urls'][0], 'nettv_playvideo', '')
+
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'nettv_playvideo':
+		nettv_playvideo(url)
+
 
 def addLink(name,url,page,iconimage,fanart='',duration='00:00', published='0000-00-00', description=''):
         ok=True
@@ -1849,7 +1903,7 @@ def addLink(name,url,page,iconimage,fanart='',duration='00:00', published='0000-
 		u=sys.argv[0]+"?url="+urllib.quote_plus(url)+"&page="+str(page)+"&name="+urllib.quote_plus(name)
 	else:
 		u=url
-        liz=xbmcgui.ListItem(name, iconImage="DefaultVideo.png", thumbnailImage=iconimage)
+        liz=xbmcgui.ListItem(name.strip(), iconImage="DefaultVideo.png", thumbnailImage=iconimage)
         liz.setInfo( type="Video", infoLabels={ "Title": name } )
 
 	if duration != '00:00':

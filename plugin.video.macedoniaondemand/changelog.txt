@@ -1,3 +1,6 @@
+v1.4.24
+   - [net-tv] initial support
+
 v1.4.23
    - [tvboxuzivo] initial support
 
