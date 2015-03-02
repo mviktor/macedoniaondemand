@@ -733,24 +733,22 @@ def playTelmaVideo(shorturl):
 
 	return match
 
-def listTelmaVideos(shorturl):
-	url = ''
-	if shorturl == '' or shorturl == None:
-		shorturl = '/video'
+def listTelmaToptemaVideos():
+	url = 'http://telma.mk/content/top-tema-pres-forum'
+	data = readurl(url)
+	data = data.replace('\n', '').replace('\r', '')
+	list = [];
 
-	url = 'http://telma.com.mk'+shorturl
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	link = link.replace('\n', ' ').replace('\r', ' ')
-	match=re.compile('<h2 property="dc:title" datatype="">.+?<a href=".+?">(.+?)</a>.+?<div class="post-date">(.+?)</div>.+?<video.+?src="(.+?)"').findall(link)
-	nextpage = ''
-	nextpagematch = re.compile('<li class="pager-next">.+?href="(.+?)">.+?</li>').findall(link)
-	if nextpagematch != []:
-		nextpage = nextpagematch[0]
-	return [match, nextpage]
+	start = data.find('<div class="pane-content">')
+	match = re.compile('<p>(.+?)</p>.*?<iframe src="(.+?)"').findall(data)
+	if match != []:
+		item = match[0]
+	else:
+		item = []
+
+	start = data.find('<div class="top-tema-node-box">')
+	match = re.compile('<img.+?src="(.+?)".+?<a href="(.+?)">(.+?)</a>').findall(data, start)
+	return [item,match]
 
 # serbiaplus methods
 
@@ -1706,19 +1704,20 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'telma_front':
 		addLink('Вести во 18:30', '', 'play_telma_vesti', '')
-		addDir('Видео', 'list_telma_videos', '', '')
+		addDir('Топ тема - прес форум', 'list_telma_toptema', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
 	elif page == 'play_telma_vesti':
 		playTelmaVideo('/')
 
-	elif page == 'list_telma_videos':
-		listing = listTelmaVideos(url)
-		for Title,PostDate,Video in listing[0]:
-			addLink(Title+' '+PostDate, Video, '', '')
-		if listing[1] != '':
-			addDir('Следна Страна >', 'list_telma_videos', listing[1], '')
+	elif page == 'list_telma_toptema':
+		listing = listTelmaToptemaVideos()
+		if listing[0] != []:
+			item = listing[0]
+			addLink(item[0], 'plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+item[1].split('?')[0].split('/')[-1], '', '')
+		for thumb, url, title in listing[1]:
+			addLink(title, url, 'play_telma_video', thumb)
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))
 
