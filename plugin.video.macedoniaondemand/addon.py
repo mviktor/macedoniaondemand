@@ -1381,7 +1381,6 @@ def PROCESS_PAGE(page,url='',name=''):
 		addDir('serbiaplus (beta)', 'serbiaplus_front', '', '')
 		addDir('netraja.net (beta)', 'netraja_front', '', 'http://3.bp.blogspot.com/-_z6ksp3rY6Q/U0HL30rMwaI/AAAAAAAADAs/_hSEFNwNZ_8/s1600/7.png')
 		addDir('tvboxuzivo (beta)', 'tvboxuzivo_front', '', '')
-		addDir('net-tv (beta)', 'nettv_front', '', '')
 		addDir('останати...', 'live_other', '', '')
 		setView()
 		xbmcplugin.endOfDirectory(int(sys.argv[1]))

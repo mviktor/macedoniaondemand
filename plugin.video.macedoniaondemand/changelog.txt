@@ -1,3 +1,7 @@
+v1.4.26
+   - [net-tv] remove link to net-tv (but still keep functionality)
+   - [hrt] fix for changed site layout
+
 v1.4.25
    - [volim.tv] fixed
 
