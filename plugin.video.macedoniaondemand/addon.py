@@ -607,7 +607,7 @@ def playAlsatVideo(url):
 # HRT Methods
 
 def createHRTSeriesListing():
-	url='http://www.hrt.hr/enz'
+	url='http://www.hrt.hr/enz/'
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
@@ -615,12 +615,15 @@ def createHRTSeriesListing():
 	response.close()
 	start=link.find('<div class="all_shows">')
 	end=link.find('</div>', start)
-	match=re.compile('<li><a.+?href="(.+?)">(.+?)</a></li>').findall(link[start:end])
+	match=re.compile('<li><a.+?href="(.+?)"><span>(.+?)</span></a></li>').findall(link[start:end])
 	return match
 
 def listHRTEpisodes(url):
 	list=[]
 	url = url.replace('&amp;', '&')
+	if url[0:2] == '//':
+		url = 'http:'+url
+
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
 
