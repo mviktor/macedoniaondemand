@@ -954,7 +954,11 @@ def playvolimtvurl(url):
 	response = urllib2.urlopen(req)
 	link = response.read()
 	response.close()
-	match = re.compile('"application/x-mpegurl".*?src="(.+?)"').findall(link)
+	match=re.compile("ipadUrl: '(.+?)'").findall(link)
+
+	if match == []:
+		match = re.compile('"application/x-mpegurl".*?src="(.+?)"').findall(link)
+
 	if match != []:
 		pDialog.update(90, 'Playing')
 		playurl(match[0])
