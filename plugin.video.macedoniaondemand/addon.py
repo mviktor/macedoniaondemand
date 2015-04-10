@@ -916,6 +916,7 @@ def listVolimtv():
 	url='http://www.volim.tv/rts-1'
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
+	req.add_header('Accept', str_accept)
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
@@ -936,6 +937,7 @@ def playvolimtvurl(url):
 	pDialog.update(30, 'Verifying userid and password')
 	req = urllib2.Request(loginurl)
 	req.add_header('User-Agent', user_agent)
+	req.add_header('Accept', str_accept)
 	req.add_data(urllib.urlencode(logindata))
 	response = urllib2.urlopen(req)
 	link=response.read()
@@ -950,6 +952,7 @@ def playvolimtvurl(url):
 
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
+	req.add_header('Accept', str_accept)
 	req.add_header('Cookie', cookiestr)
 	response = urllib2.urlopen(req)
 	link = response.read()

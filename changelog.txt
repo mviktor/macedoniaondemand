@@ -1,3 +1,6 @@
+v1.4.28
+   - [volim.tv] get rid of annoying site protection
+
 v1.4.27
    - [volim.tv] try ipadurl first
 
