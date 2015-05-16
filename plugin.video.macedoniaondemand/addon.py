@@ -920,7 +920,7 @@ def listVolimtv():
 	response = urllib2.urlopen(req)
 	link=response.read()
 	response.close()
-	match=re.compile("url\(http://www.volim.tv/images/design/watchlive.png\);' href='(.+?)'>(.+?)</a>").findall(link)
+	match=re.compile("url\(http://volim.tv/images/design/watchlive.png\);' href='(.+?)'>(.+?)</a></li>").findall(link)
 
 	return match
 
@@ -963,8 +963,11 @@ def playvolimtvurl(url):
 		match = re.compile('"application/x-mpegurl".*?src="(.+?)"').findall(link)
 
 	if match != []:
+		stream_url = match[0]
+		if stream_url[0:7] != 'http://':
+			stream_url = 'http://edge3.volim.tv/live/'+stream_url
 		pDialog.update(90, 'Playing')
-		playurl(match[0])
+		playurl(stream_url)
 	pDialog.close()
 	return True
 
