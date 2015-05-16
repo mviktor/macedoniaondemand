@@ -1242,6 +1242,59 @@ def nettv_playvideo(url):
 	streamurl = 'http://net-tv.wix.com.usrfiles.com/'+match[0]
 	return playGenericChannel(streamurl)
 
+# VESTI.MK methods
+
+def listvestimkvideos(pagenr):
+	req = urllib2.Request('http://vesti.mk/videos/news?page='+pagenr)
+	req.add_header('User-Agent', user_agent)
+	response = urllib2.urlopen(req)
+	data = response.read()
+	response.close()
+
+	start = data.find('<div class=\'top-news-header\'>')
+	if start == -1:
+		return []
+
+	match = re.compile("<li><div class='thumb-wrap'><a target='_blank' href='(.+?)' class='thumb-img'><div class='thumb-img-wrap'><img src=\"(.+?)\".+?<span class='thumb-source'(( title='(.+?)'|))>(.+?)</span>").findall(data, start)
+	return match
+
+def vestimk_playvideo(url):
+	pDialog = xbmcgui.DialogProgress()
+	pDialog.create('vesti.mk', 'reading')
+	pDialog.update(30, 'Fetching video stream')
+	data = readurl('http://vesti.mk'+url)
+	data = data.replace('\n', '').replace('\r', '')
+	match1 = re.compile('<div class="topbar-close">.*?<a href="(.+?)" ').findall(data)
+	if match1 == []:
+		return False
+	print "Reading "+match1[0]
+	pDialog.update(60, 'Fetching video stream')
+	data = readurl(match1[0])
+
+	ogv = re.compile('<source src="(.+?)" type="video/ogg"').findall(data)
+	if ogv != []:
+		host = re.compile("http://(.+?)/").findall(match1[0])
+		if host == []:
+			return False
+		playurl("http://"+host[0]+"/"+ogv[0])
+		pDialog.close()
+		return True
+
+	yt = re.compile('youtube.com/(embed/|watch\?v=)(.+?)( |"|\'|\?)').findall(data)
+	if yt != []:
+		pDialog.update(90, 'Playing video')
+		print "playing youtube "+yt[0][1]
+		playurl('plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+yt[0][1])
+		pDialog.close()
+
+	dm = re.compile('dailymotion.com/embed/video/(.+?)( |"|\'|\?)').findall(data)
+	if dm != []:
+		pDialog.update(90, 'Playing video')
+		print "playing dailymotion "+dm[0][0]
+		playurl('plugin://plugin.video.dailymotion_com/?url='+dm[0][0]+'&mode=playVideo')
+		pDialog.close()
+
+	return True
 
 # general methods
 
@@ -1372,6 +1425,7 @@ def PROCESS_PAGE(page,url='',name=''):
 		stations.append(["HRT", "hrt_front", ''])
 		stations.append(["РТС", "rts_front", ''])
 		stations.append(["Prva Srpska TV", "prvatv_front", ''])
+		stations.append(["Vesti.mk", "vestimk_front", ''])
 
 		stations.append(["", "break", ''])
 		stations.append(["Гледај во живо", "live_front", ''])
@@ -1907,6 +1961,24 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'nettv_playvideo':
 		nettv_playvideo(url)
+
+	elif page == 'vestimk_front':
+		if url == '' or url == None:
+			url = '1'
+		listing = listvestimkvideos(url)
+		for link, thumb, title_enc1, title_enc2, title_long, title_short in listing:
+			title = title_long
+			if title_long == '':
+				title = title_short
+			addLink(title, link, 'vestimk_playvideo', thumb)
+		if url != '10':
+			urlpage = int(url)+1
+			addDir(' >> Претходно', 'vestimk_front', str(urlpage), '')
+		setView()
+		xbmcplugin.endOfDirectory(int(sys.argv[1]))
+
+	elif page == 'vestimk_playvideo':
+		vestimk_playvideo(url)
 
 
 def addLink(name,url,page,iconimage,fanart='',duration='00:00', published='0000-00-00', description=''):
