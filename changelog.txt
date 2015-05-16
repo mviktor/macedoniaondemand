@@ -1,3 +1,8 @@
+v1.4.29
+   - temporary remove alsat, telma, kanal5
+   - [vesti.mk] initial support
+   - [volim.tv] yet another fix
+
 v1.4.28
    - [volim.tv] get rid of annoying site protection
 
