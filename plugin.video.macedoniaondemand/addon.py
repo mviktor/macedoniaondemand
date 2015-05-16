@@ -551,59 +551,6 @@ def createOtherListing():
 	list.append(['Al Jazeera Balkans', 'rtmp://aljazeeraflashlivefs.fplive.net/aljazeeraflashlive-live app=aljazeeraflashlive-live swfUrl=http://www.nettelevizor.com/playeri/player.swf pageUrl=http://ex-yu-tv-streaming.blogspot.se playpath=aljazeera_balkans_high live=true swfVfy=true', 'http://balkans.aljazeera.net/profiles/custom/themes/aljazeera_balkans/images/banner.png'])
 	return list
 
-# ALSAT-M methods
-
-def createAlsatRrugaListing():
-	url='http://alsat-m.tv/feed/emisione/rruga-drejt/index.1.rss'
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	match=re.compile('<item>\n.+?<title>(.+?)</title>\n.+?<link>(.+?)</link>\n.+?\n.+?\n.+?<enclosure type="image/jpeg" url="(.+?)"').findall(link)
-	return match
-
-def createAlsat15mindebatListing():
-	url = 'http://alsat-m.tv/emisione/15_min_debat/index.1.html'
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link = response.read()
-	response.close()
-	match=re.compile('<div class="video_short">\n        \n                \n            \n        <div class="image_play">\n            <a id=".+?" href=".+?>\n                \n                    <img src="(.+?)" alt=".+?" />\n                    \n                \n            </a>\n        </div>\n        <h4><a href="(.+?)">(.+?)</a></h4>').findall(link[link.find('<div id="videos_latest">'):link.find('<div id="videos_most_popular">')])
-
-	return match
-
-def createAlsat15mindebatLatest():
-	url = 'http://alsat.mk/index.php/emisii/index.1.html'
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link = response.read()
-	response.close()
-	match=re.compile('<div class="video_short">\n        \n                \n            \n        <div class="image_play">\n            <a id=".+?" href=".+?>\n                \n                    <img src="(.+?)" alt=".+?" />\n                    \n                \n            </a>\n        </div>\n        <h4><a href="(.+?)">(.+?)</a></h4>').findall(link[link.find('<div id="videos_latest">'):link.find('<div id="videos_most_popular">')])
-
-	return match
-
-def playAlsatVideo(url):
-	pDialog = xbmcgui.DialogProgress()
-	pDialog.create('Alsat Video', 'Initializing')
-	pDialog.update(50, 'Fetching video stream')
-	link = readurl(url)
-
-	filematch = re.compile('file:"(.+?)"').findall(link)
-	titlematch = re.compile('<title>(.+?)</title>').findall(link)
-
-	if filematch[0].__contains__('youtu.be'):
-		stream = 'plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1].strip()
-	else:
-		stream = filematch[0]
-	pDialog.update(90, 'Playing')
-	playurl(stream)
-	pDialog.close()
-
-	return True
-
 # HRT Methods
 
 def createHRTSeriesListing():
@@ -666,91 +613,6 @@ def playHRTVideo(url):
 	pDialog.close()
 
 	return True
-
-
-
-# Kanal5 Methods
-
-def createKanal5Series():
-	url = 'http://www.kanal5.com.mk/vozivo.asp'
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	match=re.compile('<div style="width:150px; height:100px; background-image:url\((.+?)\); background-repeat:no-repeat; background-position: center center; background-size:cover; overflow:hidden;"></div>\r\n                    </a>\r\n                  </div>\r\n                  <h2 style="font-size:17px !important;"><a href="(.+?)" data-rel="prettyPhoto\[iframe\]">(.+?)</a></h2>').findall(link)
-
-	return match
-
-def listKanal5Episodes(url):
-	url = url.replace('&amp;', '&')
-	req = urllib2.Request('http://www.kanal5.com.mk/'+url)
-	req.add_header('User-Agent', user_agent)
-
-	try:
-		response = urllib2.urlopen(req)
-		link = response.read()
-		response.close()
-	except:
-		return
-
-	match = re.compile('<a href="(.+?)"><div id="video" .+? class="title_tx">(.+?)</div></a>').findall(link)
-	return match
-
-def playKanal5Video(url, name):
-	pDialog = xbmcgui.DialogProgress()
-	pDialog.create('Kanal5', 'Initializing')
-	url = url.replace('&amp;', '&')
-	req = urllib2.Request('http://www.kanal5.com.mk/'+url)
-	req.add_header('User-Agent', user_agent)
-	pDialog.update(50, 'Finding stream')
-	response = urllib2.urlopen(req)
-	link = response.read()
-	response.close()
-	match = re.compile('file: "(.+?)",').findall(link)
-
-	pDialog.update(80, 'Playing')
-	playurl(match[1]+'|Cookie=macedoniaondemand')
-	pDialog.close()
-	return True
-
-# Telma methods
-
-def playTelmaVideo(shorturl):
-	url = 'http://www.telma.com.mk'+shorturl
-	req = urllib2.Request(url)
-	pDialog = xbmcgui.DialogProgress()
-	pDialog.create('Telma Video', 'Initializing')
-	pDialog.update(50, 'Fetching video stream')
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	match=re.compile('<div class="mediaelement-video"><video.+?src="(.+?)" class="mediaelement-formatter').findall(link)
-	pDialog.update(90, 'Playing')
-	playurl(match[0])
-	pDialog.close()
-
-	return match
-
-def listTelmaVideos(shorturl):
-	url = ''
-	if shorturl == '' or shorturl == None:
-		shorturl = '/video'
-
-	url = 'http://telma.com.mk'+shorturl
-	req = urllib2.Request(url)
-	req.add_header('User-Agent', user_agent)
-	response = urllib2.urlopen(req)
-	link=response.read()
-	response.close()
-	link = link.replace('\n', ' ').replace('\r', ' ')
-	match=re.compile('<h2 property="dc:title" datatype="">.+?<a href=".+?">(.+?)</a>.+?<div class="post-date">(.+?)</div>.+?<video.+?src="(.+?)"').findall(link)
-	nextpage = ''
-	nextpagematch = re.compile('<li class="pager-next">.+?href="(.+?)">.+?</li>').findall(link)
-	if nextpagematch != []:
-		nextpage = nextpagematch[0]
-	return [match, nextpage]
 
 # serbiaplus methods
 
@@ -1419,9 +1281,6 @@ def PROCESS_PAGE(page,url='',name=''):
 		stations.append(["НОВА ТВ", "novatv_front", ''])
 		stations.append(["Сител", "sitel_front", ''])
 		stations.append(["МРТ Play", "mrt_front", ''])
-		stations.append(["AlsatM", "alsat_front", ''])
-		stations.append(["Kanal5", "kanal5_front", ''])
-		stations.append(["Телма", "telma_front", ''])
 		stations.append(["HRT", "hrt_front", ''])
 		stations.append(["РТС", "rts_front", ''])
 		stations.append(["Prva Srpska TV", "prvatv_front", ''])
@@ -1657,75 +1516,6 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'play_mrt_video':
 		playmrtvideo(url)
 
-	elif page == 'alsat_front':
-		addDir('Последни емисии', 'alsat_15latest', '', '')
-		addDir('Emisione Rruga Drejt', 'alsat_rruga', '', '')
-		addDir('Emisione 15 min Debat', 'alsat_15mindebat', '', '')
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'alsat_rruga':
-		listing = createAlsatRrugaListing()
-		for title, link, thumb in listing:
-			title = title.replace('&lt;', '<')
-			title = title.replace('&gt;', '>')
-			title = title.replace('&quot;', "'")
-			title = title.replace('&#039;', "'")
-			title = title.replace('&amp;', "&")
-
-			thumb = thumb.replace('&lt;', '<')
-			thumb = thumb.replace('&gt;', '>')
-			thumb = thumb.replace('&quot;', "'")
-			thumb = thumb.replace('&#039;', "'")
-			thumb = thumb.replace('&amp;', "&")
-
-			addLink(title, link, 'playalsatvideo', thumb)
-		setView('files', 500)
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'alsat_15mindebat':
-		listing = createAlsat15mindebatListing()
-		for thumb, link, title in listing:
-			title = title.replace('&lt;', '<')
-			title = title.replace('&gt;', '>')
-			title = title.replace('&quot;', "'")
-			title = title.replace('&#039;', "'")
-			title = title.replace('&amp;', "&")
-
-			thumb = thumb.replace('&lt;', '<')
-			thumb = thumb.replace('&gt;', '>')
-			thumb = thumb.replace('&quot;', "'")
-			thumb = thumb.replace('&#039;', "'")
-			thumb = thumb.replace('&amp;', "&")
-
-			addLink(title, 'http://alsat-m.tv/'+link, 'playalsatvideo', thumb)
-		setView('files', 500)
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'alsat_15latest':
-		listing = createAlsat15mindebatLatest()
-		for thumb, link, title in listing:
-			title = title.replace('&lt;', '<')
-			title = title.replace('&gt;', '>')
-			title = title.replace('&quot;', "'")
-			title = title.replace('&#039;', "'")
-			title = title.replace('&amp;', "&")
-
-			thumb = thumb.replace('&lt;', '<')
-			thumb = thumb.replace('&gt;', '>')
-			thumb = thumb.replace('&quot;', "'")
-			thumb = thumb.replace('&#039;', "'")
-			thumb = thumb.replace('&amp;', "&")
-
-			addLink(title, link, 'playalsatvideo', thumb)
-		setView('files', 500)
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-
-
-	elif page == 'playalsatvideo':
-		playAlsatVideo(url)
-
 	elif page == 'hrt_front':
 		addLink('HRT1 Live', 'http://5323.live.streamtheworld.com/HTV1?streamtheworld_user=1&nobuf=1361039552824', '', 'http://upload.wikimedia.org/wikipedia/commons/1/1f/HRT1_Logo_aktuell.jpg')
 		addLink('HRT4 Live', 'http://4623.live.streamtheworld.com/HRT4?streamtheworld_user=1&nobuf=1384296611008', '', 'http://images3.wikia.nocookie.net/__cb20121221162236/logopedia/images/d/dc/HRT4.png')
@@ -1745,50 +1535,6 @@ def PROCESS_PAGE(page,url='',name=''):
 
 	elif page == 'play_hrt_video':
 		playHRTVideo(url)
-
-	elif page == 'kanal5_front':
-		addLink('Во живо', 'mms://live.kanal5.com.mk/kanal5', '', '')
-		addDir('', 'break', '', '')
-		listing = createKanal5Series()
-		for thumb,link,title in listing:
-			addDir(title, 'list_kanal5_episodes', link, 'http://www.kanal5.com.mk/'+thumb)
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'list_kanal5_episodes':
-		listing = listKanal5Episodes(url)
-		for link,title in listing:
-			title = title.replace('<span class="datum_tx"><strong>', '')
-			title = title.replace('</strong>', '')
-			title = title.replace('</span>', '')
-			addLink(title, link, 'playKanal5Video', '')
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'playKanal5Video':
-		playKanal5Video(url, name)
-
-	elif page == 'telma_front':
-		addLink('Вести во 18:30', '', 'play_telma_vesti', '')
-		addDir('Видео', 'list_telma_videos', '', '')
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'play_telma_vesti':
-		playTelmaVideo('/')
-
-	elif page == 'list_telma_videos':
-		listing = listTelmaVideos(url)
-		for Title,PostDate,Video in listing[0]:
-			addLink(Title+' '+PostDate, Video, '', '')
-		if listing[1] != '':
-			addDir('Следна Страна >', 'list_telma_videos', listing[1], '')
-		setView()
-		xbmcplugin.endOfDirectory(int(sys.argv[1]))
-
-	elif page == 'play_telma_video':
-		playTelmaVideo(url)
-
 
 	elif page == 'rts_front':
 
