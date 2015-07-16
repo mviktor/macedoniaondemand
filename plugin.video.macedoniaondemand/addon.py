@@ -602,6 +602,8 @@ def playHRTVideo(url):
 	response.close()
 
 	filematch = re.compile('<video data-url="(.+?)"').findall(link)
+	if filematch == []:
+		filematch = re.compile('<video src="(.+?)"').findall(link)
 	titlematch = re.compile('<title>(.+?)</title>').findall(link)
 
 	if filematch[0].__contains__('youtu.be'):
