@@ -793,7 +793,7 @@ def playvolimtvurl(url):
 	if logindata == False:
 		xbmcgui.Dialog().ok('Macedonia On Demand', 'Wrong username or password.', 'Register on http://volim.tv', 'And edit Settings on this page')
 		return False
-	loginurl='http://www.volim.tv/includes/ajax/login.php'
+	loginurl='http://volim.tv/includes/ajax/login.php'
 
 	pDialog = xbmcgui.DialogProgress()
 	pDialog.create('volim.tv', 'Initializing')
