@@ -912,7 +912,7 @@ def playrtsvideo(url):
 	url = 'http://www.rts.rs/boxes/boxBox.jsp?boxId='+box[0]
 	content = readurl(url)
 	pDialog.update(60, 'Finding stream')
-	match = re.compile('src="(.+?")').findall(content)
+	match = re.compile('src="(.+?)"').findall(content)
 
 	stream = ''
 	if match[0].__contains__('youtube'):
@@ -1569,6 +1569,7 @@ def PROCESS_PAGE(page,url='',name=''):
 	elif page == 'list_rts_episodes':
 		art=''
 		content=readurl('http://www.rts.rs'+url)
+		content=content.replace('\n', '').replace('\r', '')
 		metadata=re.compile('<meta name="description" content="(.+?)"').findall(content)
 		if metadata != []:
 			image=re.compile('src=&#034;(.+?)&#034;').findall(metadata[0])
