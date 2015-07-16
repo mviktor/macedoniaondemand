@@ -1,3 +1,8 @@
+v1.4.30
+   - [volim.tv] fix for volim.tv section
+   - [hrt] fix for hrt section
+   - [rts] fix for rts section
+
 v1.4.29
    - temporary remove alsat, telma, kanal5
    - [vesti.mk] initial support
