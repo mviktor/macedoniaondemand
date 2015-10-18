@@ -601,7 +601,7 @@ def playHRTVideo(url):
 	link = response.read()
 	response.close()
 
-	filematch = re.compile('<video data-url="(.+?)"').findall(link)
+	filematch = re.compile('<video data-.+?="(.+?)"').findall(link)
 	if filematch == []:
 		filematch = re.compile('<video src="(.+?)"').findall(link)
 	titlematch = re.compile('<title>(.+?)</title>').findall(link)
