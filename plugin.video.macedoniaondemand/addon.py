@@ -275,9 +275,9 @@ def play24VestiVideo(url):
 	titlematch = re.compile('<title>(.+?)</title>').findall(link)
 
 	if filematch[0].__contains__('dailymotion'):
-		stream = 'plugin://plugin.video.dailymotion_com/?url='+filematch[0].split('/')[-1]+'&mode=playVideo'
+		stream = 'plugin://plugin.video.dailymotion_com/?url='+filematch[0].split('/')[-1].split('&')[0]+'&mode=playVideo'
 	elif filematch[0].__contains__('youtube'):
-		stream = 'plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1]
+		stream = 'plugin://plugin.video.youtube/?path=/root/video&action=play_video&videoid='+filematch[0].split('/')[-1].split('&')[0]
 	else:
 		stream = filematch[0]
 
