@@ -1,3 +1,10 @@
+v2.0
+   - [24vesti.mk] trim youtube and dailymotion links
+   - [hrt] fix for hrt
+   - [netraja] fix for netraja
+   - volim.tv, serbiaplus and tvboxuzivo temporarily removed
+   - new structure for github
+
 v1.4.30
    - [volim.tv] fix for volim.tv section
    - [hrt] fix for hrt section
