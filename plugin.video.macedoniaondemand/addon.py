@@ -838,7 +838,7 @@ def playvolimtvurl(url):
 # netraja methods
 
 def listNetrajaCategories():
-	url='http://www.netraja.net'
+	url='http://zabavanet.blogspot.com/'
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
@@ -852,7 +852,7 @@ def listNetrajaCategories():
 
 def listNetrajaTvs(url):
 	category = url.split('/')[-1]
-	url = 'http://www.netraja.net/feeds/posts/summary/-/'+category+'?start-index=1&max-results=200&alt=json'
+	url = 'http://zabavanet.blogspot.com/feeds/posts/summary/-/'+category+'?start-index=1&max-results=200&alt=json'
 	req = urllib2.Request(url)
 	req.add_header('User-Agent', user_agent)
 	response = urllib2.urlopen(req)
